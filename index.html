@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+
+<!-- PWA META TAGS -->
+<meta name="theme-color" content="#2D6A4F"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Room Portal"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+
+<title>Room Portal — Gnanesh's Place</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #F7F4EF;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE7;
+    --border: #E2DDD6;
+    --text: #1A1814;
+    --muted: #7A756D;
+    --accent: #2D6A4F;
+    --accent-light: #D8EDDF;
+    --accent-text: #1B4332;
+    --danger: #C0392B;
+    --danger-light: #FADBD8;
+    --warning: #D4860A;
+    --warning-light: #FEF3CD;
+    --gold: #B8860B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 2rem; background: var(--bg);
+  }
+  .login-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 2.5rem 2rem; width: 100%; max-width: 380px; box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+  }
+  .login-logo { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--accent); text-align: center; margin-bottom: 4px; }
+  .login-sub { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 2rem; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; display: block; }
+  .form-group { margin-bottom: 14px; }
+  .form-input {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: 'DM Sans', sans-serif; background: var(--bg);
+    color: var(--text); transition: border-color 0.2s; outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .btn-login {
+    width: 100%; padding: 11px; background: var(--accent); color: white; border: none;
+    border-radius: 10px; font-size: 15px; font-family: 'DM Sans', sans-serif;
+    font-weight: 500; cursor: pointer; transition: opacity 0.2s; margin-top: 4px;
+  }
+  .btn-login:hover { opacity: 0.88; }
+  .login-error {
+    background: var(--danger-light); color: var(--danger); font-size: 12px;
+    padding: 8px 12px; border-radius: 8px; margin-top: 10px; display: none; text-align: center;
+  }
+
+  /* ── MAIN APP ── */
+  #app { display: none; min-height: 100vh; }
+
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.25rem;
+    display: flex; align-items: center; justify-content: space-between; height: 56px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-logo { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .topbar-user { display: flex; align-items: center; gap: 8px; }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--accent-light);
+    color: var(--accent-text); font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .btn-logout {
+    font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 10px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-logout:hover { background: var(--surface2); }
+
+  /* Notification bell */
+  .btn-notif {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 8px; cursor: pointer; font-size: 16px; position: relative;
+    transition: background 0.15s;
+  }
+  .btn-notif:hover { background: var(--surface2); }
+  .btn-notif.enabled { border-color: var(--accent); background: var(--accent-light); }
+  .notif-dot {
+    position: absolute; top: 4px; right: 4px; width: 7px; height: 7px;
+    background: var(--danger); border-radius: 50%; display: none;
+  }
+  .notif-dot.show { display: block; }
+
+  .nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 1.25rem; overflow-x: auto; }
+  .nav-tab {
+    padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--muted);
+    border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
+    font-family: 'DM Sans', sans-serif; transition: color 0.15s; white-space: nowrap;
+  }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav-tab:hover { color: var(--text); }
+
+  .content { padding: 1.5rem 1.25rem; max-width: 540px; margin: 0 auto; }
+
+  .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .sec-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .btn-add {
+    background: var(--accent); color: white; border: none; border-radius: 8px;
+    padding: 7px 14px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer;
+  }
+  .btn-add:hover { opacity: 0.88; }
+
+  /* News card */
+  .news-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1rem 1.25rem; margin-bottom: 10px; position: relative;
+  }
+  .news-card .tag {
+    display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+    background: var(--accent-light); color: var(--accent-text); margin-bottom: 7px;
+  }
+  .news-card .tag.urgent { background: var(--danger-light); color: var(--danger); }
+  .news-card .tag.info { background: var(--warning-light); color: var(--warning); }
+  .news-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .news-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .news-card .meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .btn-del {
+    position: absolute; top: 12px; right: 12px; background: none; border: none;
+    cursor: pointer; color: var(--muted); font-size: 16px; padding: 2px 6px; border-radius: 6px;
+  }
+  .btn-del:hover { background: var(--danger-light); color: var(--danger); }
+
+  /* ── DINNER POLL ── */
+  .poll-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.25rem; margin-bottom: 12px;
+  }
+  .poll-question { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .poll-meta { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+  .poll-option {
+    border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 14px;
+    margin-bottom: 8px; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+    background: var(--bg);
+  }
+  .poll-option:hover { border-color: var(--accent); }
+  .poll-option.voted { border-color: var(--accent); background: var(--accent-light); }
+  .poll-option-bar {
+    position: absolute; top: 0; left: 0; height: 100%;
+    background: var(--accent-light); z-index: 0; transition: width 0.4s ease; border-radius: 10px;
+  }
+  .poll-option-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
+  .poll-option-label { font-size: 14px; font-weight: 500; }
+  .poll-option-pct { font-size: 12px; color: var(--accent-text); font-weight: 600; }
+  .poll-voters { font-size: 11px; color: var(--muted); margin-top: 10px; position: relative; z-index: 1; }
+  .poll-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; gap: 6px; }
+  .poll-total { font-size: 11px; color: var(--muted); }
+  .poll-close-btn {
+    font-size: 11px; color: var(--danger); background: none; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500;
+  }
+
+  /* ── PAYMENT ── */
+  .pay-amount-box {
+    background: var(--accent); border-radius: 16px; padding: 1.5rem;
+    text-align: center; margin-bottom: 1rem; color: white;
+  }
+  .pay-amount-box .lbl { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+  .pay-amount-box .amt { font-family: 'DM Serif Display', serif; font-size: 40px; }
+  .pay-amount-box .sublbl { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+
+  .upi-apps-section { margin-bottom: 10px; }
+  .upi-apps-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .upi-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .upi-app-btn {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; transition: all 0.15s; text-decoration: none; color: var(--text);
+  }
+  .upi-app-btn:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-1px); }
+  .upi-app-btn .app-icon { font-size: 26px; line-height: 1; }
+  .upi-app-btn .app-name { font-size: 11px; font-weight: 500; text-align: center; }
+
+  .upi-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  }
+  .upi-icon {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--accent-light);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .upi-lbl { font-size: 11px; color: var(--muted); }
+  .upi-id { font-size: 15px; font-weight: 600; margin-top: 1px; word-break: break-all; }
+  .upi-copy {
+    margin-left: auto; font-size: 11px; padding: 5px 10px; border-radius: 8px;
+    background: var(--accent-light); color: var(--accent-text); border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; flex-shrink: 0;
+  }
+
+  .scanner-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.25rem; text-align: center; margin-bottom: 10px;
+  }
+  .scanner-img { width: 100%; max-width: 280px; height: auto; object-fit: contain; border-radius: 10px; }
+  .scanner-placeholder {
+    width: 200px; height: 200px; background: var(--bg); border: 1px dashed var(--border);
+    border-radius: 10px; margin: 0 auto 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; color: var(--muted); flex-direction: column; gap: 6px;
+  }
+  .scanner-placeholder svg { opacity: 0.35; }
+
+  .my-status {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.25rem;
+  }
+  .status-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .status-row:last-child { border-bottom: none; }
+  .status-month { font-size: 13px; }
+  .status-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .status-badge.paid { background: var(--accent-light); color: var(--accent-text); }
+  .status-badge.pending { background: var(--danger-light); color: var(--danger); }
+
+  /* ── ADMIN ── */
+  .admin-section { margin-bottom: 1.5rem; }
+  .admin-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 1rem 1.25rem; margin-bottom: 8px;
+  }
+  .admin-sec-label {
+    font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 8px;
+  }
+  .member-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .member-row:last-child { border-bottom: none; }
+  .member-info { display: flex; align-items: center; gap: 10px; }
+  .member-av {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--accent-light);
+    color: var(--accent-text); font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .member-name { font-size: 14px; font-weight: 500; }
+  .member-id { font-size: 11px; color: var(--muted); }
+  .btn-mark-paid, .btn-mark-pending {
+    font-size: 12px; padding: 5px 10px; border-radius: 8px; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500;
+  }
+  .btn-mark-paid { background: var(--accent-light); color: var(--accent-text); }
+  .btn-mark-pending { background: var(--danger-light); color: var(--danger); }
+
+  .settings-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .settings-row .form-input { flex: 1; }
+  .btn-save {
+    padding: 10px 18px; background: var(--accent); color: white; border: none;
+    border-radius: 10px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap;
+  }
+  .btn-save:hover { opacity: 0.88; }
+
+  .person-amount-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0; overflow: hidden; margin-bottom: 8px;
+  }
+  .person-amount-header {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    border-bottom: 1px solid var(--border); cursor: pointer; background: var(--surface);
+    transition: background 0.15s;
+  }
+  .person-amount-header:hover { background: var(--surface2); }
+  .person-amount-header .member-av { flex-shrink: 0; }
+  .person-header-info { flex: 1; }
+  .person-total { font-size: 13px; font-weight: 600; color: var(--accent); }
+  .person-paid-count { font-size: 11px; color: var(--muted); }
+  .expand-icon { font-size: 12px; color: var(--muted); transition: transform 0.2s; }
+  .expand-icon.open { transform: rotate(180deg); }
+
+  .person-days-list { padding: 10px 14px; display: none; }
+  .person-days-list.open { display: block; }
+  .day-entry {
+    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .day-entry:last-child { border-bottom: none; }
+  .day-label { font-size: 12px; color: var(--muted); flex: 1; min-width: 80px; }
+  .day-amount { font-size: 13px; font-weight: 500; color: var(--text); min-width: 50px; }
+  .day-status { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .day-status.paid { background: var(--accent-light); color: var(--accent-text); }
+  .day-status.pending { background: var(--danger-light); color: var(--danger); }
+  .day-toggle {
+    font-size: 11px; padding: 3px 8px; border-radius: 6px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 500; background: var(--bg);
+    color: var(--muted); border: 1px solid var(--border);
+  }
+  .day-toggle:hover { background: var(--surface2); }
+  .day-del { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 14px; padding: 2px 4px; border-radius: 4px; }
+  .day-del:hover { color: var(--danger); background: var(--danger-light); }
+
+  .add-day-row {
+    display: flex; align-items: center; gap: 6px; padding-top: 10px; margin-top: 4px;
+    border-top: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .add-day-input {
+    flex: 1; min-width: 70px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--bg);
+    color: var(--text); outline: none;
+  }
+  .add-day-input:focus { border-color: var(--accent); }
+  .btn-add-day {
+    padding: 7px 12px; background: var(--accent); color: white; border: none;
+    border-radius: 8px; font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap;
+  }
+
+  /* Modal */
+  .modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    z-index: 200; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 18px; padding: 1.75rem;
+    width: 100%; max-width: 380px; border: 1px solid var(--border);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h2 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 1rem; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-cancel {
+    flex: 1; padding: 10px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-confirm {
+    flex: 1; padding: 10px; background: var(--accent); color: white; border: none;
+    border-radius: 10px; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+
+  .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: 14px; }
+  .empty-state .icon { font-size: 36px; margin-bottom: 8px; }
+
+  .upload-btn {
+    display: inline-block; padding: 8px 16px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--text);
+  }
+
+  select.form-input { appearance: none; }
+
+  .poll-opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .poll-opt-row .form-input { flex: 1; }
+  .btn-rm-opt {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; cursor: pointer; color: var(--muted); font-size: 14px;
+  }
+  .btn-rm-opt:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger-light); }
+  .btn-add-opt {
+    font-size: 13px; color: var(--accent); background: var(--accent-light); border: none;
+    border-radius: 8px; padding: 7px 14px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-weight: 500; width: 100%; margin-top: 4px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: white; font-size: 13px; padding: 10px 20px;
+    border-radius: 20px; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Notification permission banner */
+  .notif-banner {
+    background: var(--accent-light); border: 1px solid var(--accent); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .notif-banner-text { font-size: 13px; flex: 1; color: var(--accent-text); }
+  .btn-allow-notif {
+    background: var(--accent); color: white; border: none; border-radius: 8px;
+    padding: 6px 12px; font-size: 12px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; font-weight: 500; white-space: nowrap;
+  }
+  .btn-dismiss-notif {
+    background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 2px 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🏠 Room Portal</div>
+    <div class="login-sub">Gnanesh's Place — Member Login</div>
+    <div class="form-group">
+      <label class="form-label">Your Name / ID</label>
+      <input class="form-input" id="login-id" type="text" placeholder="e.g. Bhan" autocomplete="off"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="login-pass" type="password" placeholder="Enter your password"/>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Incorrect ID or password. Please try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">🏠 Room Portal</div>
+    <div class="topbar-right">
+      <!-- Notification bell — shown to members only -->
+      <button class="btn-notif" id="btn-notif" onclick="requestNotifPermission()" title="Enable notifications" style="display:none;">
+        🔔<span class="notif-dot" id="notif-dot"></span>
+      </button>
+      <div class="topbar-user">
+        <div class="user-avatar" id="top-avatar">GN</div>
+        <span class="user-name" id="top-name">Gnanesh</span>
+        <button class="btn-logout" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav" id="main-nav">
+    <button class="nav-tab active" onclick="showTab('news')">📢 News</button>
+    <button class="nav-tab" onclick="showTab('dinner')">🍽 Dinner</button>
+    <button class="nav-tab" onclick="showTab('pay')">💳 Payment</button>
+    <button class="nav-tab" id="admin-tab" style="display:none;" onclick="showTab('admin')">⚙️ Admin</button>
+  </div>
+
+  <!-- NEWS TAB -->
+  <div class="content" id="tab-news">
+    <div class="sec-head">
+      <div class="sec-title">Notices</div>
+      <button class="btn-add" id="add-news-btn" style="display:none;" onclick="openModal('modal-news')">+ Post</button>
+    </div>
+    <div id="notif-banner-container"></div>
+    <div id="news-list"></div>
+  </div>
+
+  <!-- DINNER POLL TAB -->
+  <div class="content" id="tab-dinner" style="display:none;">
+    <div class="sec-head">
+      <div class="sec-title">Tonight's Dinner</div>
+      <button class="btn-add" id="create-poll-btn" style="display:none;" onclick="openModal('modal-poll')">+ Poll</button>
+    </div>
+    <div id="dinner-display"></div>
+  </div>
+
+  <!-- PAYMENT TAB -->
+  <div class="content" id="tab-pay" style="display:none;">
+    <div class="sec-head"><div class="sec-title">Payment</div></div>
+    <div id="pay-display"></div>
+  </div>
+
+  <!-- ADMIN TAB -->
+  <div class="content" id="tab-admin" style="display:none;">
+    <div class="sec-title" style="margin-bottom:1.25rem;">Admin Panel</div>
+
+    <!-- Firebase config section -->
+    <div class="admin-section">
+      <div class="admin-sec-label">🔔 Firebase Push Config</div>
+      <div class="admin-card">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+          Paste your Firebase VAPID key below to enable push notifications for members.
+          Get this from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates.
+        </p>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">VAPID Key</label>
+          <div class="settings-row">
+            <input class="form-input" id="set-vapid" type="text" placeholder="BNdK...your VAPID key here"/>
+            <button class="btn-save" onclick="saveVapid()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment settings -->
+    <div class="admin-section">
+      <div class="admin-sec-label">Payment Settings</div>
+      <div class="admin-card">
+        <div class="form-group">
+          <label class="form-label">UPI ID</label>
+          <div class="settings-row">
+            <input class="form-input" id="set-upi" type="text" placeholder="yourname@ybl"/>
+            <button class="btn-save" onclick="saveUPI()">Save</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">QR / Scanner Image</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+            <div id="scanner-preview-admin">
+              <div class="scanner-placeholder" style="width:80px;height:80px;font-size:11px;">No image</div>
+            </div>
+            <label class="upload-btn">
+              Upload QR <input type="file" accept="image/*" style="display:none;" onchange="uploadScanner(event)"/>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Per-person amount tracking -->
+    <div class="admin-section">
+      <div class="admin-sec-label">Members — Daily Amount Tracker</div>
+      <div id="person-amounts-list"></div>
+    </div>
+
+    <!-- Members payment status -->
+    <div class="admin-section">
+      <div class="admin-sec-label">Members Payment Status (This Month)</div>
+      <div class="admin-card" id="members-status-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Post News -->
+<div class="modal-bg" id="modal-news">
+  <div class="modal">
+    <h2>Post a Notice</h2>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-input" id="news-type">
+        <option value="notice">Notice</option>
+        <option value="urgent">Urgent</option>
+        <option value="info">Info</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" id="news-title" placeholder="e.g. Water supply off tomorrow"/>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label class="form-label">Details</label>
+      <textarea class="form-input" id="news-body" rows="3" style="resize:none;height:80px;" placeholder="Write more details here..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-news')">Cancel</button>
+      <button class="btn-confirm" onclick="postNews()">Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Create Dinner Poll -->
+<div class="modal-bg" id="modal-poll">
+  <div class="modal">
+    <h2>Create Dinner Poll</h2>
+    <div class="form-group">
+      <label class="form-label">Question</label>
+      <input class="form-input" id="poll-question" placeholder="e.g. What's for dinner tonight?"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Options</label>
+      <div id="poll-options-list">
+        <div class="poll-opt-row"><input class="form-input" placeholder="Option 1"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button></div>
+        <div class="poll-opt-row"><input class="form-input" placeholder="Option 2"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button></div>
+        <div class="poll-opt-row"><input class="form-input" placeholder="Option 3"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button></div>
+      </div>
+      <button class="btn-add-opt" onclick="addPollOpt()">+ Add Option</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-poll')">Cancel</button>
+      <button class="btn-confirm" onclick="createPoll()">Create Poll</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================================
+     FIREBASE SDK  — Replace the firebaseConfig below with YOUR values!
+     Get them from: Firebase Console → Your Project → Project Settings → General
+====================================================================== -->
+<script type="module">
+  import { initializeApp }      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+
+  // ── ⚠️  REPLACE THESE VALUES WITH YOUR OWN FIREBASE CONFIG ── //
+  const firebaseConfig = {
+    apiKey:            "REPLACE_WITH_YOUR_apiKey",
+    authDomain:        "REPLACE_WITH_YOUR_authDomain",
+    projectId:         "REPLACE_WITH_YOUR_projectId",
+    storageBucket:     "REPLACE_WITH_YOUR_storageBucket",
+    messagingSenderId: "REPLACE_WITH_YOUR_messagingSenderId",
+    appId:             "REPLACE_WITH_YOUR_appId"
+  };
+  // ──────────────────────────────────────────────────────────── //
+
+  const app       = initializeApp(firebaseConfig);
+  const messaging = getMessaging(app);
+
+  // Expose to global scope so other scripts can use it
+  window._fbMessaging = messaging;
+
+  // Handle foreground notifications (app is open)
+  onMessage(messaging, (payload) => {
+    console.log('[FCM] Foreground message:', payload);
+    const title = payload.notification?.title || '🏠 Room Portal';
+    const body  = payload.notification?.body  || 'New update!';
+    showToast(`🔔 ${title}: ${body}`);
+
+    // Re-render news if on news tab
+    const newsTab = document.getElementById('tab-news');
+    if (newsTab && newsTab.style.display !== 'none') {
+      renderNews();
+    }
+  });
+</script>
+
+<script>
+// ── USERS ──
+const USERS = {
+  'Gnanesh': { pass: 'Admin#0530', role: 'admin',  initials: 'GN' },
+  'Bhan':    { pass: 'BHAN@15',   role: 'member', initials: 'BH' },
+  'Hari':    { pass: 'HARI@31',   role: 'member', initials: 'HR' },
+  'Yogi':    { pass: 'YOGI@01',   role: 'member', initials: 'YG' },
+  'Ashraf':  { pass: 'ASHRAF@21', role: 'member', initials: 'AS' },
+  'Sai':     { pass: 'JAYADEEP_SAI', role: 'member', initials: 'SI' }
+};
+const MEMBERS = ['Bhan','Hari','Yogi','Ashraf','Sai'];
+
+// ── STATE ──
+let state = {
+  news: [],
+  polls: [],
+  upi: '',
+  scanner: '',
+  payStatus: {},
+  personAmounts: {},
+  vapidKey: '',
+  fcmTokens: []   // stores tokens from each member device
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('rp_state_v2');
+    if(saved) state = JSON.parse(saved) || state;
+  } catch(e) { console.warn('State load error:', e); }
+  MEMBERS.forEach(m => {
+    if(!state.payStatus[m])     state.payStatus[m]     = {};
+    if(!state.personAmounts[m]) state.personAmounts[m] = [];
+  });
+  if(!state.polls)     state.polls     = [];
+  if(!state.vapidKey)  state.vapidKey  = '';
+  if(!state.fcmTokens) state.fcmTokens = [];
+}
+function saveState() {
+  try { localStorage.setItem('rp_state_v2', JSON.stringify(state)); }
+  catch(e) { showToast('Storage full — try removing old data'); }
+}
+
+// ── AUTH ──
+let currentUser = null;
+
+function doLogin() {
+  const id   = document.getElementById('login-id').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const user = USERS[id];
+  if(user && user.pass === pass) {
+    currentUser = { name: id, ...user };
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-id').value   = '';
+    document.getElementById('login-pass').value = '';
+    startApp();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display          = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display          = 'block';
+  document.getElementById('top-avatar').textContent     = currentUser.initials;
+  document.getElementById('top-name').textContent       = currentUser.name;
+
+  const isAdmin = currentUser.role === 'admin';
+  document.getElementById('admin-tab').style.display        = isAdmin ? '' : 'none';
+  document.getElementById('add-news-btn').style.display     = isAdmin ? '' : 'none';
+  document.getElementById('create-poll-btn').style.display  = isAdmin ? '' : 'none';
+
+  // Show notification bell for members
+  if(!isAdmin) {
+    document.getElementById('btn-notif').style.display = '';
+    updateNotifBellState();
+  }
+
+  showTab('news');
+  if(isAdmin) loadAdminPanel();
+
+  // Register service worker
+  registerSW();
+}
+
+// ── SERVICE WORKER & FCM ──
+function registerSW() {
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then(reg => {
+        console.log('[SW] Registered:', reg.scope);
+      })
+      .catch(err => console.warn('[SW] Registration failed:', err));
+  }
+}
+
+function updateNotifBellState() {
+  const btn = document.getElementById('btn-notif');
+  const dot = document.getElementById('notif-dot');
+  if(!btn) return;
+  const perm = Notification.permission;
+  if(perm === 'granted') {
+    btn.classList.add('enabled');
+    btn.title = 'Notifications enabled ✓';
+    dot.classList.remove('show');
+  } else if(perm === 'denied') {
+    btn.classList.remove('enabled');
+    btn.title = 'Notifications blocked — enable in browser settings';
+    dot.classList.add('show');
+  } else {
+    btn.classList.remove('enabled');
+    btn.title = 'Tap to enable notifications';
+    dot.classList.add('show');
+  }
+}
+
+async function requestNotifPermission() {
+  if(!('Notification' in window)) {
+    showToast('Notifications not supported in this browser'); return;
+  }
+  if(Notification.permission === 'denied') {
+    showToast('Notifications blocked — enable in browser/phone settings'); return;
+  }
+  if(Notification.permission === 'granted') {
+    await subscribeFCM();
+    showToast('Notifications already enabled ✓'); 
+    updateNotifBellState();
+    hideBanner();
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  updateNotifBellState();
+  if(perm === 'granted') {
+    await subscribeFCM();
+    showToast('🔔 Notifications enabled!');
+    hideBanner();
+  } else {
+    showToast('Notification permission denied');
+  }
+}
+
+async function subscribeFCM() {
+  const vapid = state.vapidKey;
+  if(!vapid) { 
+    console.warn('[FCM] No VAPID key saved yet — admin needs to set it');
+    return; 
+  }
+  if(!window._fbMessaging) {
+    console.warn('[FCM] Firebase not initialised — check your firebaseConfig');
+    return;
+  }
+  try {
+    const sw  = await navigator.serviceWorker.ready;
+    const tok = await getTokenFCM(window._fbMessaging, { vapidKey: vapid, serviceWorkerRegistration: sw });
+    if(tok) {
+      console.log('[FCM] Token:', tok);
+      // Save token (in real setup you'd send this to a backend / Firestore)
+      if(!state.fcmTokens.includes(tok)) {
+        state.fcmTokens.push(tok);
+        saveState();
+      }
+      showToast('Subscribed to notifications ✓');
+    }
+  } catch(err) {
+    console.warn('[FCM] Token error:', err);
+  }
+}
+
+// Proxy for getToken (imported as module, exposed globally)
+async function getTokenFCM(messaging, options) {
+  // Dynamic import to access the module function
+  const { getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
+  return getToken(messaging, options);
+}
+
+// ── NOTIFICATION BANNER (shown on news tab for members) ──
+function renderNotifBanner() {
+  const container = document.getElementById('notif-banner-container');
+  if(!container) return;
+  if(currentUser.role === 'admin') { container.innerHTML = ''; return; }
+  if(Notification.permission === 'granted') { container.innerHTML = ''; return; }
+  container.innerHTML = `
+    <div class="notif-banner" id="notif-banner">
+      <span style="font-size:20px;">🔔</span>
+      <span class="notif-banner-text">Enable notifications to get alerts when Gnanesh posts a notice!</span>
+      <button class="btn-allow-notif" onclick="requestNotifPermission()">Allow</button>
+      <button class="btn-dismiss-notif" onclick="hideBanner()">✕</button>
+    </div>`;
+}
+function hideBanner() {
+  const b = document.getElementById('notif-banner');
+  if(b) b.remove();
+}
+
+// ── TABS ──
+function showTab(name) {
+  ['news','dinner','pay','admin'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===name ? '' : 'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ['news','dinner','pay','admin'][i] === name);
+  });
+  if(name==='news')   { renderNews();       if(currentUser.role !== 'admin') renderNotifBanner(); }
+  if(name==='dinner') renderDinner();
+  if(name==='pay')    renderPay();
+  if(name==='admin')  loadAdminPanel();
+}
+
+// ── NEWS ──
+function renderNews() {
+  const list = document.getElementById('news-list');
+  if(!state.news.length) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div>No notices yet</div>`;
+    return;
+  }
+  list.innerHTML = state.news.map((n,i) => `
+    <div class="news-card">
+      <span class="tag ${n.type==='urgent'?'urgent':n.type==='info'?'info':''}">${n.type}</span>
+      <h3>${escHtml(n.title)}</h3>
+      ${n.body ? `<p>${escHtml(n.body)}</p>` : ''}
+      <div class="meta">Posted by Gnanesh · ${n.date}</div>
+      ${currentUser.role==='admin' ? `<button class="btn-del" onclick="deleteNews(${i})">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function postNews() {
+  const title = document.getElementById('news-title').value.trim();
+  if(!title) { showToast('Enter a title'); return; }
+  const type = document.getElementById('news-type').value;
+  const body = document.getElementById('news-body').value.trim();
+  const d    = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  state.news.unshift({ title, body, type, date: d });
+  saveState();
+  closeModal('modal-news');
+  document.getElementById('news-title').value = '';
+  document.getElementById('news-body').value  = '';
+  renderNews();
+  showToast('Notice posted!');
+
+  // ── Trigger push notification to all members ──
+  sendPushToAll(title, body || type);
+}
+
+// ── SEND PUSH VIA FIREBASE REST API ──
+// NOTE: In a production app you'd do this server-side (Cloud Functions).
+// For this setup, admin's browser calls the FCM v1 API directly.
+// You need to set your Server Key in Firebase Console → Project Settings → Cloud Messaging
+async function sendPushToAll(title, body) {
+  if(!state.fcmTokens || !state.fcmTokens.length) {
+    console.log('[FCM] No tokens saved yet — members need to enable notifications first');
+    return;
+  }
+
+  // NOTE: For security, store your server key in Firebase Cloud Functions, not here.
+  // This approach works but exposes your server key in the browser.
+  // A better approach: use Firebase Cloud Functions to send the notification server-side.
+  // See the README comment below for the Cloud Functions approach.
+  const SERVER_KEY = state.serverKey || '';
+  if(!SERVER_KEY) {
+    console.warn('[FCM] No server key — save it in Admin panel to send pushes');
+    showToast('⚠️ Add Server Key in Admin to push notifications');
+    return;
+  }
+
+  for(const token of state.fcmTokens) {
+    try {
+      await fetch('https://fcm.googleapis.com/fcm/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `key=${SERVER_KEY}`
+        },
+        body: JSON.stringify({
+          to: token,
+          notification: {
+            title: `🏠 Room Portal — ${title}`,
+            body:  body,
+            icon:  '/icons/icon-192.png',
+            click_action: '/'
+          }
+        })
+      });
+      console.log('[FCM] Push sent to token:', token.slice(0,20)+'...');
+    } catch(err) {
+      console.warn('[FCM] Push failed:', err);
+    }
+  }
+  showToast('📣 Push notification sent to members!');
+}
+
+function deleteNews(i) { state.news.splice(i,1); saveState(); renderNews(); }
+
+// ── DINNER POLL ──
+function renderDinner() {
+  const d = document.getElementById('dinner-display');
+  const activePolls = state.polls.filter(p => !p.closed);
+  const closedPolls = state.polls.filter(p =>  p.closed);
+  if(!state.polls.length) {
+    d.innerHTML = `<div class="empty-state"><div class="icon">🗳️</div>No polls yet — Admin can create one!</div>`;
+    return;
+  }
+  let html = '';
+  if(activePolls.length)
+    html += activePolls.map(p => renderPollCard(p, state.polls.indexOf(p), false)).join('');
+  if(closedPolls.length) {
+    html += `<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;">Past Polls</div>`;
+    html += closedPolls.map(p => renderPollCard(p, state.polls.indexOf(p), true)).join('');
+  }
+  d.innerHTML = html;
+}
+
+function renderPollCard(p, idx, viewOnly) {
+  const totalVotes = p.options.reduce((s,o) => s + o.votes.length, 0);
+  const myVote     = p.options.findIndex(o => o.votes.includes(currentUser.name));
+  const hasVoted   = myVote >= 0;
+  const canVote    = !viewOnly && !p.closed;
+
+  const optsHtml = p.options.map((opt, oi) => {
+    const pct      = totalVotes ? Math.round((opt.votes.length/totalVotes)*100) : 0;
+    const isMyVote = opt.votes.includes(currentUser.name);
+    return `<div class="poll-option ${isMyVote?'voted':''}"
+        onclick="${canVote ? `castVote(${idx},${oi})` : ''}"
+        style="cursor:${canVote?'pointer':'default'}">
+      <div class="poll-option-bar" style="width:${(hasVoted||viewOnly)?pct:0}%"></div>
+      <div class="poll-option-content">
+        <span class="poll-option-label">${isMyVote?'✓ ':''}${escHtml(opt.label)}</span>
+        ${(hasVoted||viewOnly) ? `<span class="poll-option-pct">${pct}% (${opt.votes.length})</span>` : ''}
+      </div>
+      ${(hasVoted||viewOnly) && opt.votes.length ? `<div class="poll-voters">${escHtml(opt.votes.join(', '))}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `<div class="poll-card">
+    <div class="poll-question">${escHtml(p.question)}</div>
+    <div class="poll-meta">${p.date} · ${totalVotes} vote${totalVotes!==1?'s':''} · ${p.closed?'Closed':'Open'}</div>
+    ${optsHtml}
+    <div class="poll-footer">
+      <span class="poll-total">${totalVotes} total vote${totalVotes!==1?'s':''}</span>
+      <span style="display:flex;gap:8px;">
+        ${currentUser.role==='admin' && !p.closed ? `<button class="poll-close-btn" onclick="closePoll(${idx})">Close poll</button>` : ''}
+        ${currentUser.role==='admin' ? `<button class="poll-close-btn" onclick="deletePoll(${idx})" style="color:var(--danger)">Delete</button>` : ''}
+      </span>
+    </div>
+  </div>`;
+}
+
+function castVote(pollIdx, optIdx) {
+  const poll = state.polls[pollIdx];
+  if(!poll || poll.closed) return;
+  poll.options.forEach(o => { o.votes = o.votes.filter(v => v !== currentUser.name); });
+  poll.options[optIdx].votes.push(currentUser.name);
+  saveState(); renderDinner();
+}
+function closePoll(idx)  { state.polls[idx].closed = true;  saveState(); renderDinner(); }
+function deletePoll(idx) { state.polls.splice(idx,1);        saveState(); renderDinner(); }
+
+function addPollOpt() {
+  const list = document.getElementById('poll-options-list');
+  const n    = list.children.length + 1;
+  const row  = document.createElement('div');
+  row.className = 'poll-opt-row';
+  row.innerHTML = `<input class="form-input" placeholder="Option ${n}"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button>`;
+  list.appendChild(row);
+}
+function removePollOpt(btn) {
+  const list = document.getElementById('poll-options-list');
+  if(list.children.length > 2) btn.closest('.poll-opt-row').remove();
+  else showToast('Need at least 2 options');
+}
+function createPoll() {
+  const q = document.getElementById('poll-question').value.trim();
+  if(!q) { showToast('Enter a question'); return; }
+  const inputs = document.querySelectorAll('#poll-options-list .form-input');
+  const opts   = [...inputs].map(i=>i.value.trim()).filter(Boolean);
+  if(opts.length < 2) { showToast('Add at least 2 options'); return; }
+  const d = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  state.polls.unshift({ question: q, options: opts.map(l=>({label:l,votes:[]})), date: d, closed: false });
+  saveState(); closeModal('modal-poll');
+  document.getElementById('poll-question').value = '';
+  document.querySelectorAll('#poll-options-list .form-input').forEach(i=>i.value='');
+  renderDinner();
+  showToast('Poll created!');
+}
+
+// ── PAYMENT ──
+function currentMonthKey()   { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
+function currentMonthLabel() { return new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}); }
+
+function renderPay() {
+  const d       = document.getElementById('pay-display');
+  const isAdmin = currentUser.role === 'admin';
+  const myEntries    = isAdmin ? [] : (state.personAmounts[currentUser.name] || []);
+  const myTotal      = myEntries.reduce((s,e) => s + Number(e.amount||0), 0);
+  const myPaidTotal  = myEntries.filter(e=>e.paid).reduce((s,e) => s + Number(e.amount||0), 0);
+  const myPending    = myTotal - myPaidTotal;
+
+  let html = '';
+  if(!isAdmin) {
+    html += `<div class="pay-amount-box">
+      <div class="lbl">Your Amount Due</div>
+      <div class="amt">₹${myPending > 0 ? myPending.toLocaleString('en-IN') : '0'}</div>
+      <div class="sublbl">₹${myPaidTotal.toLocaleString('en-IN')} paid · ₹${myTotal.toLocaleString('en-IN')} total</div>
+    </div>`;
+  }
+
+  const upiId = state.upi || '';
+  if(upiId) {
+    html += `<div class="upi-apps-section">
+      <div class="upi-apps-label">Pay quickly using your UPI app:</div>
+      <div class="upi-apps-grid">
+        <a class="upi-app-btn" href="tez://upi/pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event, this.href)">
+          <div class="app-icon">🟢</div><div class="app-name">GPay</div>
+        </a>
+        <a class="upi-app-btn" href="phonepe://pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event, this.href)">
+          <div class="app-icon">🟣</div><div class="app-name">PhonePe</div>
+        </a>
+        <a class="upi-app-btn" href="paytmmp://pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event, this.href)">
+          <div class="app-icon">🔵</div><div class="app-name">Paytm</div>
+        </a>
+        <a class="upi-app-btn" href="upi://pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event, this.href)">
+          <div class="app-icon">🟠</div><div class="app-name">Other UPI</div>
+        </a>
+      </div>
+    </div>`;
+  }
+
+  if(upiId) {
+    html += `<div class="upi-box">
+      <div class="upi-icon">📲</div>
+      <div style="flex:1;">
+        <div class="upi-lbl">UPI ID</div>
+        <div class="upi-id">${escHtml(upiId)}</div>
+      </div>
+      <button class="upi-copy" onclick="copyUPI()">Copy</button>
+    </div>`;
+  }
+
+  html += `<div class="scanner-box">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Scan to Pay</div>
+    ${state.scanner
+      ? `<img src="${state.scanner}" class="scanner-img" alt="QR Code"/>`
+      : `<div class="scanner-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <path d="M14 14h2v2h-2zM16 16h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/>
+          </svg>
+          <span>QR not uploaded yet</span>
+        </div>`}
+  </div>`;
+
+  if(!isAdmin) {
+    html += `<div class="my-status">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">My Dues Breakdown</div>
+      ${myEntries.length ? myEntries.map(e => `
+        <div class="status-row">
+          <span class="status-month">${escHtml(e.date)}${e.note?' — '+escHtml(e.note):''}</span>
+          <span style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span style="font-size:13px;font-weight:600;">₹${Number(e.amount).toLocaleString('en-IN')}</span>
+            <span class="status-badge ${e.paid?'paid':'pending'}">${e.paid?'✓ Paid':'⏳ Pending'}</span>
+          </span>
+        </div>
+      `).join('') : `<div style="text-align:center;padding:1rem;font-size:13px;color:var(--muted);">No dues recorded yet</div>`}
+    </div>`;
+  }
+  d.innerHTML = html;
+}
+
+function handleUPI(e, href) { e.preventDefault(); window.location.href = href; setTimeout(()=>showToast('Opening payment app...'),400); }
+function copyUPI() {
+  if(!state.upi) return;
+  if(navigator.clipboard?.writeText) navigator.clipboard.writeText(state.upi).then(()=>showToast('UPI ID copied!')).catch(()=>fallbackCopy(state.upi));
+  else fallbackCopy(state.upi);
+}
+function fallbackCopy(text) {
+  const el = document.createElement('textarea');
+  el.value = text; el.style.position='fixed'; el.style.opacity='0';
+  document.body.appendChild(el); el.select();
+  try { document.execCommand('copy'); showToast('UPI ID copied!'); } catch(e) { showToast('Copy failed — copy manually'); }
+  document.body.removeChild(el);
+}
+
+// ── ADMIN PANEL ──
+function loadAdminPanel() {
+  document.getElementById('set-upi').value   = state.upi    || '';
+  document.getElementById('set-vapid').value = state.vapidKey || '';
+
+  const sp = document.getElementById('scanner-preview-admin');
+  sp.innerHTML = state.scanner
+    ? `<img src="${state.scanner}" style="width:80px;height:80px;object-fit:contain;border-radius:8px;" alt="QR"/>`
+    : `<div class="scanner-placeholder" style="width:80px;height:80px;font-size:11px;">No image</div>`;
+
+  const mk = currentMonthKey();
+  const ml = document.getElementById('members-status-list');
+  ml.innerHTML = MEMBERS.map(m => {
+    const st = state.payStatus[m]?.[mk] || 'pending';
+    return `<div class="member-row">
+      <div class="member-info">
+        <div class="member-av">${USERS[m].initials}</div>
+        <div>
+          <div class="member-name">${m}</div>
+          <div class="member-id">${currentMonthLabel()}</div>
+        </div>
+      </div>
+      ${st==='paid'
+        ? `<button class="btn-mark-pending" onclick="togglePay('${m}','pending')">Mark Pending</button>`
+        : `<button class="btn-mark-paid"    onclick="togglePay('${m}','paid')">Mark Paid</button>`}
+    </div>`;
+  }).join('');
+
+  renderPersonAmounts();
+}
+
+function saveVapid() {
+  const v = document.getElementById('set-vapid').value.trim();
+  if(v) { state.vapidKey = v; saveState(); showToast('VAPID key saved!'); }
+  else  { showToast('Enter a VAPID key first'); }
+}
+
+function renderPersonAmounts() {
+  const container = document.getElementById('person-amounts-list');
+  if(!container) return;
+  container.innerHTML = MEMBERS.map(m => {
+    const entries  = state.personAmounts[m] || [];
+    const total    = entries.reduce((s,e) => s + Number(e.amount||0), 0);
+    const paidTotal= entries.filter(e=>e.paid).reduce((s,e) => s + Number(e.amount||0), 0);
+    const pending  = total - paidTotal;
+    const today    = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+    const entriesHtml = entries.length ? entries.map((e,ei) => `
+      <div class="day-entry">
+        <span class="day-label">${escHtml(e.date)}${e.note?' — '+escHtml(e.note):''}</span>
+        <span class="day-amount">₹${Number(e.amount).toLocaleString('en-IN')}</span>
+        <span class="day-status ${e.paid?'paid':'pending'}">${e.paid?'Paid':'Due'}</span>
+        <button class="day-toggle" onclick="toggleEntryPaid('${m}',${ei})">${e.paid?'Unmark':'Mark Paid'}</button>
+        <button class="day-del"    onclick="deleteEntry('${m}',${ei})">✕</button>
+      </div>`).join('')
+      : `<div style="font-size:12px;color:var(--muted);padding:8px 0;">No entries yet</div>`;
+
+    return `<div class="person-amount-card">
+      <div class="person-amount-header" onclick="togglePersonExpand('${m}')">
+        <div class="member-av">${USERS[m].initials}</div>
+        <div class="person-header-info">
+          <div class="member-name">${m}</div>
+          <div class="member-id">${entries.length} entr${entries.length!==1?'ies':'y'}</div>
+        </div>
+        <div style="text-align:right;margin-right:8px;">
+          <div class="person-total">₹${total.toLocaleString('en-IN')} total</div>
+          <div class="person-paid-count" style="color:${pending>0?'var(--danger)':'var(--accent)'};">₹${pending.toLocaleString('en-IN')} pending</div>
+        </div>
+        <div class="expand-icon" id="exp-icon-${m}">▼</div>
+      </div>
+      <div class="person-days-list" id="exp-list-${m}">
+        ${entriesHtml}
+        <div class="add-day-row">
+          <input class="add-day-input" id="inp-date-${m}" type="text" value="${today}" placeholder="Date"/>
+          <input class="add-day-input" id="inp-note-${m}" type="text" placeholder="Note (optional)"/>
+          <input class="add-day-input" id="inp-amt-${m}"  type="number" min="0" placeholder="₹ Amt" style="width:70px;flex:none;"/>
+          <button class="btn-add-day" onclick="addEntry('${m}')">Add</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePersonExpand(m) {
+  const list = document.getElementById('exp-list-'+m);
+  const icon = document.getElementById('exp-icon-'+m);
+  if(!list||!icon) return;
+  const isOpen = list.classList.contains('open');
+  list.classList.toggle('open', !isOpen);
+  icon.classList.toggle('open', !isOpen);
+}
+function reopenExpand(m) {
+  setTimeout(() => {
+    document.getElementById('exp-list-'+m)?.classList.add('open');
+    document.getElementById('exp-icon-'+m)?.classList.add('open');
+  }, 15);
+}
+
+function addEntry(m) {
+  const date   = document.getElementById('inp-date-'+m).value.trim();
+  const note   = document.getElementById('inp-note-'+m).value.trim();
+  const amtVal = document.getElementById('inp-amt-'+m).value.trim();
+  if(!date || !amtVal || isNaN(amtVal) || Number(amtVal)<=0) { showToast('Enter a valid date and amount'); return; }
+  if(!state.personAmounts[m]) state.personAmounts[m] = [];
+  state.personAmounts[m].push({ date, note, amount: Number(amtVal), paid: false });
+  saveState(); renderPersonAmounts(); reopenExpand(m);
+  showToast(`Entry added for ${m}`);
+}
+function toggleEntryPaid(m, ei) {
+  if(!state.personAmounts[m]?.[ei]) return;
+  state.personAmounts[m][ei].paid = !state.personAmounts[m][ei].paid;
+  saveState(); renderPersonAmounts(); reopenExpand(m);
+}
+function deleteEntry(m, ei) {
+  if(!state.personAmounts[m]) return;
+  state.personAmounts[m].splice(ei,1);
+  saveState(); renderPersonAmounts(); reopenExpand(m);
+}
+function togglePay(member, status) {
+  const mk = currentMonthKey();
+  if(!state.payStatus[member]) state.payStatus[member]={};
+  state.payStatus[member][mk] = status;
+  saveState(); loadAdminPanel();
+  showToast(`${member} marked as ${status}`);
+}
+function saveUPI() {
+  const v = document.getElementById('set-upi').value.trim();
+  if(v) { state.upi = v; saveState(); showToast('UPI ID saved!'); }
+  else  { showToast('Enter a UPI ID first'); }
+}
+function uploadScanner(e) {
+  const file = e.target.files[0]; if(!file) return;
+  if(file.size > 2*1024*1024) { showToast('Image too large — use a smaller file'); return; }
+  const reader = new FileReader();
+  reader.onload  = ev => { state.scanner = ev.target.result; saveState(); loadAdminPanel(); showToast('QR uploaded!'); };
+  reader.onerror = () => showToast('Failed to read image');
+  reader.readAsDataURL(file);
+}
+
+// ── HELPERS ──
+function escHtml(str) {
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+});
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── ENTER KEY LOGIN ──
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-id').addEventListener('keydown',   e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
+
+// ── INIT ──
+loadState();
+</script>
+</body>
+</html>
