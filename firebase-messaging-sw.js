@@ -5,15 +5,16 @@
 // ============================================================
 
 // ── STEP: Replace these with YOUR Firebase config values ──
-const FIREBASE_CONFIG = {
-  apiKey:            "REPLACE_WITH_YOUR_apiKey",
-  authDomain:        "REPLACE_WITH_YOUR_authDomain",
-  projectId:         "REPLACE_WITH_YOUR_projectId",
-  storageBucket:     "REPLACE_WITH_YOUR_storageBucket",
-  messagingSenderId: "REPLACE_WITH_YOUR_messagingSenderId",
-  appId:             "REPLACE_WITH_YOUR_appId"
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDTvdt-xueov5P-RxD7kl4n3FtlwYrQ1Qw",
+  authDomain: "homies-f3af3.firebaseapp.com",
+  projectId: "homies-f3af3",
+  storageBucket: "homies-f3af3.firebasestorage.app",
+  messagingSenderId: "274559235191",
+  appId: "1:274559235191:web:cab73238629e2f05884272",
+  measurementId: "G-B28850J61Q"
 };
-
 // Import Firebase scripts (use compat version for service workers)
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
