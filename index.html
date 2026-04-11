@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Room Portal"/>
-<link rel="manifest" href="manifest.json"/>
-<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="apple-touch-icon" href="./icons/icon-192.png"/>
 <title>Room Portal — Gnanesh's Place</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
 <style>
@@ -369,22 +369,54 @@
 <!-- FIREBASE SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+  import { getMessaging, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
   const firebaseConfig = {
-    apiKey: "REPLACE_WITH_YOUR_apiKey", authDomain: "REPLACE_WITH_YOUR_authDomain",
-    projectId: "REPLACE_WITH_YOUR_projectId", storageBucket: "REPLACE_WITH_YOUR_storageBucket",
-    messagingSenderId: "REPLACE_WITH_YOUR_messagingSenderId", appId: "REPLACE_WITH_YOUR_appId"
+    apiKey: "AIzaSyDTvdt-xueov5P-RxD7kl4n3FtlwYrQ1Qw",
+    authDomain: "homies-f3af3.firebaseapp.com",
+    projectId: "homies-f3af3",
+    storageBucket: "homies-f3af3.firebasestorage.app",
+    messagingSenderId: "274559235191",
+    appId: "1:274559235191:web:cab73238629e2f05884272"
   };
+
   const app = initializeApp(firebaseConfig);
-  const messaging = getMessaging(app);
-  window._fbMessaging = messaging;
-  onMessage(messaging, (payload) => {
-    const title = payload.notification?.title || '🏠 Room Portal';
-    const body  = payload.notification?.body  || 'New update!';
-    showToast(`🔔 ${title}: ${body}`);
-    const newsTab = document.getElementById('tab-news');
-    if(newsTab && newsTab.style.display !== 'none') renderNews();
-  });
+  const db = getFirestore(app);
+
+  window._fbApp = app;
+  window._fbDb = db;
+  window._stateDocRef = doc(db, 'roomPortal', 'mainState');
+
+  window._loadSharedState = async function () {
+    const snap = await getDoc(window._stateDocRef);
+    return snap.exists() ? snap.data() : null;
+  };
+
+  window._saveSharedState = async function (nextState) {
+    const payload = JSON.parse(JSON.stringify(nextState));
+    payload.updatedAt = serverTimestamp();
+    await setDoc(window._stateDocRef, payload, { merge: false });
+  };
+
+  window._watchSharedState = function (callback) {
+    return onSnapshot(window._stateDocRef, (snap) => {
+      if (snap.exists()) callback(snap.data());
+    });
+  };
+
+  try {
+    const messaging = getMessaging(app);
+    window._fbMessaging = messaging;
+    onMessage(messaging, (payload) => {
+      const title = payload.notification?.title || '🏠 Room Portal';
+      const body  = payload.notification?.body  || 'New update!';
+      showToast(`🔔 ${title}: ${body}`);
+      if (typeof renderNews === 'function' && currentTab === 'news') renderNews();
+    });
+  } catch (e) {
+    console.warn('[Firebase Messaging]', e);
+  }
 </script>
 
 <script>
@@ -400,21 +432,67 @@ const USERS = {
 const MEMBERS = ['Bhan','Hari','Yogi','Ashraf','Sai'];
 
 // ── STATE ──
-let state = { news:[], polls:[], upi:'', scanner:'', payStatus:{}, personAmounts:{}, vapidKey:'', fcmTokens:[] };
+const DEFAULT_STATE = { news:[], polls:[], upi:'', scanner:'', payStatus:{}, personAmounts:{}, vapidKey:'', fcmTokens:[] };
+let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+let _unsubscribeSharedState = null;
 
-function loadState() {
-  try { const s = localStorage.getItem('rp_state_v2'); if(s) state = JSON.parse(s) || state; } catch(e) {}
+function normalizeState(data) {
+  const next = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...(data || {}) };
   MEMBERS.forEach(m => {
-    if(!state.payStatus[m])     state.payStatus[m]     = {};
-    if(!state.personAmounts[m]) state.personAmounts[m] = [];
+    if(!next.payStatus[m])     next.payStatus[m]     = {};
+    if(!next.personAmounts[m]) next.personAmounts[m] = [];
   });
-  if(!state.polls)     state.polls     = [];
-  if(!state.vapidKey)  state.vapidKey  = '';
-  if(!state.fcmTokens) state.fcmTokens = [];
+  if(!Array.isArray(next.news))      next.news      = [];
+  if(!Array.isArray(next.polls))     next.polls     = [];
+  if(!Array.isArray(next.fcmTokens)) next.fcmTokens = [];
+  if(typeof next.upi !== 'string')      next.upi = '';
+  if(typeof next.scanner !== 'string')  next.scanner = '';
+  if(typeof next.vapidKey !== 'string') next.vapidKey = '';
+  delete next.updatedAt;
+  return next;
 }
-function saveState() {
-  try { localStorage.setItem('rp_state_v2', JSON.stringify(state)); }
-  catch(e) { showToast('Storage full — try removing old data'); }
+
+async function loadState() {
+  try {
+    if(window._loadSharedState) {
+      const remote = await window._loadSharedState();
+      state = normalizeState(remote);
+    } else {
+      state = normalizeState(DEFAULT_STATE);
+    }
+  } catch(e) {
+    console.warn('[Firestore load]', e);
+    state = normalizeState(DEFAULT_STATE);
+    showToast('Could not load shared data');
+  }
+}
+
+async function saveState() {
+  try {
+    if(window._saveSharedState) {
+      await window._saveSharedState(normalizeState(state));
+    }
+  } catch(e) {
+    console.warn('[Firestore save]', e);
+    showToast('Sync failed — check Firestore rules');
+  }
+}
+
+function subscribeSharedState() {
+  if(!window._watchSharedState) return;
+  if(_unsubscribeSharedState) _unsubscribeSharedState();
+  _unsubscribeSharedState = window._watchSharedState((remote) => {
+    state = normalizeState(remote);
+    if(currentUser) rerenderCurrentView();
+  });
+}
+
+function rerenderCurrentView() {
+  if(!currentUser) return;
+  if(currentUser.role === 'admin' && currentTab === 'admin') loadAdminPanel();
+  if(currentTab === 'news')   { renderNews(); if(currentUser.role !== 'admin') renderNotifBanner(); }
+  if(currentTab === 'dinner') renderDinner();
+  if(currentTab === 'pay')    renderPay();
 }
 
 // ── SESSION PERSISTENCE ──
@@ -479,7 +557,7 @@ function startApp(tabToShow) {
 // ── SERVICE WORKER & FCM ──
 function registerSW() {
   if('serviceWorker' in navigator)
-    navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(e => console.warn('[SW]', e));
+    navigator.serviceWorker.register('./firebase-messaging-sw.js').catch(e => console.warn('[SW]', e));
 }
 function updateNotifBellState() {
   const btn = document.getElementById('btn-notif'), dot = document.getElementById('notif-dot');
@@ -929,14 +1007,16 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 document.getElementById('login-id').addEventListener('keydown',   e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
 
 // ── INIT: restore session on refresh ──
-loadState();
-(function restoreSession() {
+(async function initApp() {
+  await loadState();
+  subscribeSharedState();
+
   const session = loadSession();
-  if(!session?.user) return;           // No saved session → show login
+  if(!session?.user) return;
   const user = USERS[session.user];
-  if(!user) return;                    // Unknown user
+  if(!user) return;
   currentUser = { name: session.user, ...user };
-  startApp(session.tab || 'news');     // Restore last active tab
+  startApp(session.tab || 'news');
 })();
 </script>
 </body>
