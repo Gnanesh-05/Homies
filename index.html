@@ -523,14 +523,16 @@ async function saveState() {
       await window._saveSharedState(normalizeState(state));
       setSyncStatus('synced');
     }
+    return true;
   } catch(e) {
     setSyncStatus('error');
     console.warn('[Firestore save]', e);
     if(e?.code === 'permission-denied') {
-      showToast('⚠️ Save blocked — fix Firestore Security Rules (see setup guide)');
+      showToast('⚠️ Blocked by Firestore rules — re-check your rules in Firebase Console');
     } else {
       showToast('⚠️ Sync failed — check internet connection');
     }
+    throw e;
   }
 }
 
@@ -786,15 +788,16 @@ function removePollOpt(btn) {
 }
 function createPoll() {
   const q = document.getElementById('poll-question').value.trim();
-  if(!q) { showToast('Enter a question'); return; }
+  if(!q) { showToast('⚠️ Please type a question first!'); return; }
   const opts = [...document.querySelectorAll('#poll-options-list .form-input')].map(i=>i.value.trim()).filter(Boolean);
-  if(opts.length < 2) { showToast('Add at least 2 options'); return; }
+  if(opts.length < 2) { showToast('⚠️ Fill in at least 2 options before creating!'); return; }
   const d = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
   state.polls.unshift({ question:q, options:opts.map(l=>({label:l,votes:[]})), date:d, closed:false });
-  saveState(); closeModal('modal-poll');
+  closeModal('modal-poll');
   document.getElementById('poll-question').value = '';
   document.querySelectorAll('#poll-options-list .form-input').forEach(i=>i.value='');
-  renderDinner(); showToast('Poll created!');
+  renderDinner();
+  saveState().then(() => showToast('✅ Poll created & synced!')).catch(() => showToast('⚠️ Poll saved locally but sync failed'));
 }
 
 // ── PAYMENT ──
