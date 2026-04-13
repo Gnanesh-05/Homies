@@ -45,6 +45,12 @@
   .user-name { font-size: 13px; font-weight: 500; }
   .btn-logout { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
   .btn-logout:hover { background: var(--surface2); }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 2px; transition: background 0.4s; }
+  .sync-dot.synced { background: #2D6A4F; }
+  .sync-dot.syncing { background: #D4860A; animation: pulse 1s infinite; }
+  .sync-dot.error { background: #C0392B; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .sync-label { font-size: 11px; color: var(--muted); }
   .btn-notif { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; cursor: pointer; font-size: 16px; position: relative; transition: background 0.15s; }
   .btn-notif:hover { background: var(--surface2); }
   .btn-notif.enabled { border-color: var(--accent); background: var(--accent-light); }
@@ -230,6 +236,7 @@
         🔔<span class="notif-dot" id="notif-dot"></span>
       </button>
       <div class="topbar-user">
+        <span id="sync-indicator" title="Sync status" style="display:none;align-items:center;gap:3px;"><span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">…</span></span>
         <div class="user-avatar" id="top-avatar">GN</div>
         <span class="user-name" id="top-name">Gnanesh</span>
         <button class="btn-logout" onclick="doLogout()">Logout</button>
@@ -367,6 +374,11 @@
 </div>
 
 <!-- FIREBASE SDK -->
+<!-- ╔══════════════════════════════════════════════════════════╗
+     ║  FIX 1 — Firebase module must run BEFORE initApp()      ║
+     ║  type="module" scripts are deferred by the browser,     ║
+     ║  so we mark it with an id and await a readiness flag.   ║
+     ╚══════════════════════════════════════════════════════════╝ -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getMessaging, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
@@ -390,20 +402,38 @@
 
   window._loadSharedState = async function () {
     const snap = await getDoc(window._stateDocRef);
-    return snap.exists() ? snap.data() : null;
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    // FIX: scanner is stored locally only (base64 can exceed Firestore 1MB limit)
+    try { const local = localStorage.getItem('rp_scanner'); if (local) data.scanner = local; } catch(e) {}
+    return data;
   };
 
   window._saveSharedState = async function (nextState) {
     const payload = JSON.parse(JSON.stringify(nextState));
+    // FIX: strip scanner from Firestore — save it to localStorage instead
+    if (payload.scanner) {
+      try { localStorage.setItem('rp_scanner', payload.scanner); } catch(e) {}
+      delete payload.scanner;
+    }
     payload.updatedAt = serverTimestamp();
     await setDoc(window._stateDocRef, payload, { merge: false });
   };
 
   window._watchSharedState = function (callback) {
     return onSnapshot(window._stateDocRef, (snap) => {
-      if (snap.exists()) callback(snap.data());
+      if (snap.exists()) {
+        const data = snap.data();
+        // Re-attach locally stored scanner
+        try { const local = localStorage.getItem('rp_scanner'); if (local) data.scanner = local; } catch(e) {}
+        callback(data);
+      }
     });
   };
+
+  // Signal that Firebase is ready for initApp()
+  window._fbReady = true;
+  document.dispatchEvent(new Event('fb-ready'));
 
   try {
     const messaging = getMessaging(app);
@@ -457,24 +487,50 @@ async function loadState() {
     if(window._loadSharedState) {
       const remote = await window._loadSharedState();
       state = normalizeState(remote);
+      console.log('[Firestore] State loaded OK');
     } else {
+      // Firebase not ready yet — use defaults
       state = normalizeState(DEFAULT_STATE);
     }
   } catch(e) {
-    console.warn('[Firestore load]', e);
+    console.warn('[Firestore load error]', e);
     state = normalizeState(DEFAULT_STATE);
-    showToast('Could not load shared data');
+    // FIX: Show a more helpful error message with likely cause
+    if(e?.code === 'permission-denied') {
+      showToast('⚠️ Firestore: permission denied — fix your Security Rules (see setup guide)');
+    } else if(e?.code?.includes('unavailable') || e?.name === 'FirebaseError') {
+      showToast('⚠️ Firestore unavailable — check your internet connection');
+    } else {
+      showToast('⚠️ Could not load shared data — data may be out of sync');
+    }
   }
+}
+
+function setSyncStatus(status) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  const ind = document.getElementById('sync-indicator');
+  if(!dot||!lbl||!ind) return;
+  ind.style.display = 'flex';
+  dot.className = 'sync-dot ' + status;
+  lbl.textContent = status === 'synced' ? 'Synced' : status === 'syncing' ? 'Saving…' : 'Sync error';
 }
 
 async function saveState() {
   try {
     if(window._saveSharedState) {
+      setSyncStatus('syncing');
       await window._saveSharedState(normalizeState(state));
+      setSyncStatus('synced');
     }
   } catch(e) {
+    setSyncStatus('error');
     console.warn('[Firestore save]', e);
-    showToast('Sync failed — check Firestore rules');
+    if(e?.code === 'permission-denied') {
+      showToast('⚠️ Save blocked — fix Firestore Security Rules (see setup guide)');
+    } else {
+      showToast('⚠️ Sync failed — check internet connection');
+    }
   }
 }
 
@@ -483,8 +539,10 @@ function subscribeSharedState() {
   if(_unsubscribeSharedState) _unsubscribeSharedState();
   _unsubscribeSharedState = window._watchSharedState((remote) => {
     state = normalizeState(remote);
+    setSyncStatus('synced');
     if(currentUser) rerenderCurrentView();
   });
+  setSyncStatus('synced');
 }
 
 function rerenderCurrentView() {
@@ -645,19 +703,20 @@ function postNews() {
   sendPushToAll(title, body || type);
 }
 async function sendPushToAll(title, body) {
+  // FIX: The legacy FCM API (fcm.googleapis.com/fcm/send) was deprecated June 2024.
+  // Push notifications now require a backend (Cloud Function / server) with Firebase Admin SDK.
+  // For this portal, push is skipped silently — notices are still visible in the app in real-time.
   if(!state.fcmTokens?.length) return;
-  const SERVER_KEY = state.serverKey || '';
-  if(!SERVER_KEY) { showToast('⚠️ Add Server Key in Admin to push notifications'); return; }
-  for(const token of state.fcmTokens) {
-    try {
-      await fetch('https://fcm.googleapis.com/fcm/send', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':`key=${SERVER_KEY}`},
-        body: JSON.stringify({ to:token, notification:{ title:`🏠 Room Portal — ${title}`, body, icon:'/icons/icon-192.png', click_action:'/' }})
-      });
-    } catch(e) { console.warn('[FCM] Push failed:', e); }
-  }
-  showToast('📣 Push notification sent!');
+  console.log('[FCM] Push skipped — legacy API deprecated. Upgrade to Firebase Admin SDK for push.');
+  // Uncomment and configure a Cloud Function endpoint if you want push notifications:
+  // try {
+  //   await fetch('YOUR_CLOUD_FUNCTION_URL/sendPush', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ title: `🏠 Room Portal — ${title}`, body, tokens: state.fcmTokens })
+  //   });
+  //   showToast('📣 Push notification sent!');
+  // } catch(e) { console.warn('[FCM] Push failed:', e); }
 }
 function deleteNews(i) { state.news.splice(i,1); saveState(); renderNews(); }
 
@@ -1007,7 +1066,9 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 document.getElementById('login-id').addEventListener('keydown',   e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
 
 // ── INIT: restore session on refresh ──
-(async function initApp() {
+// FIX: Wait for Firebase module to finish setting up before calling loadState()
+// (type="module" scripts are deferred — they may not have run when this script executes)
+async function initApp() {
   await loadState();
   subscribeSharedState();
 
@@ -1017,7 +1078,15 @@ document.getElementById('login-id').addEventListener('keydown',   e => { if(e.ke
   if(!user) return;
   currentUser = { name: session.user, ...user };
   startApp(session.tab || 'news');
-})();
+}
+
+if (window._fbReady) {
+  initApp();
+} else {
+  document.addEventListener('fb-ready', initApp, { once: true });
+  // Fallback: if Firebase never fires (e.g. blocked by network), start anyway after 4s
+  setTimeout(() => { if (!window._fbReady) initApp(); }, 4000);
+}
 </script>
 </body>
 </html>
