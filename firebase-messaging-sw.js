@@ -1,5 +1,5 @@
 // ============================================================
-//  firebase-messaging-sw.js
+//  firebase-messaging-sw.js — Room Portal (Gnanesh's Place)
 // ============================================================
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
