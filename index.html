@@ -102,7 +102,7 @@
   .pay-amount-box .sublbl { font-size: 12px; opacity: 0.75; margin-top: 4px; }
   .upi-apps-section { margin-bottom: 10px; }
   .upi-apps-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-  .upi-apps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .upi-apps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
   .upi-app-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.15s; text-decoration: none; color: var(--text); }
   .upi-app-btn:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-1px); }
   .upi-app-btn .app-icon { font-size: 26px; line-height: 1; }
@@ -441,8 +441,9 @@
     onMessage(messaging, (payload) => {
       const title = payload.notification?.title || '🏠 Room Portal';
       const body  = payload.notification?.body  || 'New update!';
-      showToast(`🔔 ${title}: ${body}`);
-      if (typeof renderNews === 'function' && currentTab === 'news') renderNews();
+      if(typeof showToast === 'function') showToast(`🔔 ${title}: ${body}`);
+      // Refresh current view safely
+      if(typeof rerenderCurrentView === 'function') rerenderCurrentView();
     });
   } catch (e) {
     console.warn('[Firebase Messaging]', e);
@@ -766,12 +767,21 @@ function renderPollCard(p, idx, viewOnly) {
     </div>
   </div>`;
 }
-function castVote(pollIdx, optIdx) {
+async function castVote(pollIdx, optIdx) {
   const poll = state.polls[pollIdx];
   if(!poll||poll.closed) return;
+  const alreadyVoted = poll.options[optIdx].votes.includes(currentUser.name);
+  // Remove previous vote from all options
   poll.options.forEach(o => { o.votes = o.votes.filter(v => v !== currentUser.name); });
-  poll.options[optIdx].votes.push(currentUser.name);
-  saveState(); renderDinner();
+  // If clicking same option again — it's a toggle-off (remove vote)
+  if(!alreadyVoted) poll.options[optIdx].votes.push(currentUser.name);
+  renderDinner(); // instant local update
+  try {
+    await saveState();
+    showToast(alreadyVoted ? 'Vote removed' : '✅ Vote cast!');
+  } catch(e) {
+    showToast('⚠️ Vote saved locally but sync failed');
+  }
 }
 function closePoll(idx)  { state.polls[idx].closed=true;  saveState(); renderDinner(); }
 function deletePoll(idx) { state.polls.splice(idx,1);      saveState(); renderDinner(); }
@@ -823,19 +833,23 @@ function renderPay() {
     </div>`;
 
     if(upiId) {
+      const amParam = myPending > 0 ? `&am=${myPending}` : '';
       html += `<div class="upi-apps-section">
         <div class="upi-apps-label">Pay quickly using your UPI app:</div>
         <div class="upi-apps-grid">
-          <a class="upi-app-btn" href="tez://upi/pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
+          <a class="upi-app-btn" href="tez://upi/pay?pa=${encodeURIComponent(upiId)}${amParam}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
             <div class="app-icon">🟢</div><div class="app-name">GPay</div>
           </a>
-          <a class="upi-app-btn" href="phonepe://pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
+          <a class="upi-app-btn" href="phonepe://pay?pa=${encodeURIComponent(upiId)}${amParam}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
             <div class="app-icon">🟣</div><div class="app-name">PhonePe</div>
           </a>
-          <a class="upi-app-btn" href="paytmmp://pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
+          <a class="upi-app-btn" href="paytmmp://pay?pa=${encodeURIComponent(upiId)}${amParam}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
             <div class="app-icon">🔵</div><div class="app-name">Paytm</div>
           </a>
-          <a class="upi-app-btn" href="upi://pay?pa=${encodeURIComponent(upiId)}&am=${myPending||''}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
+          <a class="upi-app-btn" href="navi://upi/pay?pa=${encodeURIComponent(upiId)}${amParam}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
+            <div class="app-icon">🟡</div><div class="app-name">Navi</div>
+          </a>
+          <a class="upi-app-btn" href="upi://pay?pa=${encodeURIComponent(upiId)}${amParam}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
             <div class="app-icon">🟠</div><div class="app-name">Other UPI</div>
           </a>
         </div>
@@ -877,7 +891,15 @@ function renderPay() {
         <span class="dues-summary-item">Total: <span>₹${myTotal.toLocaleString('en-IN')}</span></span>
         <span class="dues-summary-item" style="color:var(--accent);">Paid: <span>₹${myPaid.toLocaleString('en-IN')}</span></span>
         <span class="dues-summary-item" style="color:${myPending>0?'var(--danger)':'var(--accent)'};">Pending: <span>₹${myPending.toLocaleString('en-IN')}</span></span>
-      </div>`;
+      </div>
+      ${myPending > 0 ? `
+      <div style="padding:12px 16px;border-top:1px solid var(--border);">
+        <button onclick="memberSelfConfirmPayment()" style="width:100%;padding:11px;background:var(--accent);color:white;border:none;border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;">
+          ✅ I've Paid — Confirm All Pending (₹${myPending.toLocaleString('en-IN')})
+        </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">This notifies Gnanesh to verify your payment</div>
+      </div>` : `
+      <div style="padding:12px 16px;text-align:center;border-top:1px solid var(--border);font-size:13px;color:var(--accent);font-weight:500;">🎉 All dues cleared!</div>`}`;
     } else {
       html += `<div class="dues-empty">No dues assigned yet — Gnanesh will add them shortly 😊</div>`;
     }
@@ -904,13 +926,44 @@ function renderPay() {
   el.innerHTML = html;
 }
 
-function handleUPI(e, href) { e.preventDefault(); window.location.href = href; setTimeout(()=>showToast('Opening payment app...'),400); }
+function handleUPI(e, href) {
+  e.preventDefault();
+  // On mobile, attempt to open the UPI app
+  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isMobile) {
+    window.location.href = href;
+    setTimeout(() => showToast('Opening payment app...'), 400);
+  } else {
+    // Desktop: deep links won't work — copy UPI ID instead
+    copyUPI();
+    showToast('UPI deep links work on mobile only. UPI ID copied!');
+  }
+}
 function copyUPI() {
   if(!state.upi) return;
   if(navigator.clipboard?.writeText) navigator.clipboard.writeText(state.upi).then(()=>showToast('UPI ID copied!')).catch(()=>fallbackCopy(state.upi));
   else fallbackCopy(state.upi);
 }
-function fallbackCopy(text) {
+async function memberSelfConfirmPayment() {
+  const myEntries = state.personAmounts[currentUser.name];
+  if(!myEntries) return;
+  const pendingEntries = myEntries.filter(e => !e.paid);
+  if(!pendingEntries.length) { showToast('No pending dues!'); return; }
+  // Mark all pending entries as paid
+  pendingEntries.forEach(e => { e.paid = true; });
+  renderPay();
+  try {
+    await saveState();
+    showToast('✅ Payment confirmed! Gnanesh will verify shortly.');
+    // Post a news notice so admin can see it
+    const amt = pendingEntries.reduce((s,e) => s + Number(e.amount||0), 0);
+    const d   = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    state.news.unshift({ title:`💰 ${currentUser.name} confirmed payment of ₹${amt.toLocaleString('en-IN')}`, body:'Please verify and update the payment status.', type:'info', date:d });
+    await saveState();
+  } catch(e) {
+    showToast('⚠️ Confirmation saved locally — sync failed. Check internet.');
+  }
+}
   const el = document.createElement('textarea');
   el.value=text; el.style.position='fixed'; el.style.opacity='0';
   document.body.appendChild(el); el.select();
