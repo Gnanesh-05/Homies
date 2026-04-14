@@ -1,840 +1,1908 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
-<meta name="theme-color" content="#2D6A4F"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="Room Portal"/>
-<link rel="manifest" href="./manifest.json"/>
-<link rel="apple-touch-icon" href="./icons/icon-192.png"/>
-<title>Room Portal — Gnanesh's Place</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
-<style>
-  :root {
-    --bg: #F7F4EF; --surface: #FFFFFF; --surface2: #F0EDE7; --border: #E2DDD6;
-    --text: #1A1814; --muted: #7A756D; --accent: #2D6A4F; --accent-light: #D8EDDF;
-    --accent-text: #1B4332; --danger: #C0392B; --danger-light: #FADBD8;
-    --warning: #D4860A; --warning-light: #FEF3CD; --gold: #B8860B;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="theme-color" content="#2D6A4F" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Room Portal" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <title>Room Portal — Gnanesh's Place</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #F7F4EF;
+      --surface: #FFFFFF;
+      --surface2: #F0EDE7;
+      --border: #E2DDD6;
+      --text: #1A1814;
+      --muted: #7A756D;
+      --accent: #2D6A4F;
+      --accent-light: #D8EDDF;
+      --accent-text: #1B4332;
+      --danger: #C0392B;
+      --danger-light: #FADBD8;
+      --warning: #D4860A;
+      --warning-light: #FEF3CD;
+      --gold: #B8860B;
+    }
 
-  #login-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; background: var(--bg); }
-  .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem 2rem; width: 100%; max-width: 380px; box-shadow: 0 4px 40px rgba(0,0,0,0.06); }
-  .login-logo { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--accent); text-align: center; margin-bottom: 4px; }
-  .login-sub { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 2rem; }
-  .form-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; display: block; }
-  .form-group { margin-bottom: 14px; }
-  .form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); transition: border-color 0.2s; outline: none; }
-  .form-input:focus { border-color: var(--accent); }
-  .btn-login { width: 100%; padding: 11px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 15px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.2s; margin-top: 4px; }
-  .btn-login:hover { opacity: 0.88; }
-  .login-error { background: var(--danger-light); color: var(--danger); font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-top: 10px; display: none; text-align: center; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  #app { display: none; min-height: 100vh; }
-  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.25rem; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 50; }
-  .topbar-logo { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent); }
-  .topbar-right { display: flex; align-items: center; gap: 8px; }
-  .topbar-user { display: flex; align-items: center; gap: 8px; }
-  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-light); color: var(--accent-text); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-  .user-name { font-size: 13px; font-weight: 500; }
-  .btn-logout { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-  .btn-logout:hover { background: var(--surface2); }
-  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 2px; transition: background 0.4s; }
-  .sync-dot.synced { background: #2D6A4F; }
-  .sync-dot.syncing { background: #D4860A; animation: pulse 1s infinite; }
-  .sync-dot.error { background: #C0392B; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .sync-label { font-size: 11px; color: var(--muted); }
-  .btn-notif { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; cursor: pointer; font-size: 16px; position: relative; transition: background 0.15s; }
-  .btn-notif:hover { background: var(--surface2); }
-  .btn-notif.enabled { border-color: var(--accent); background: var(--accent-light); }
-  .notif-dot { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; display: none; }
-  .notif-dot.show { display: block; }
+    body {
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-  .nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; padding: 0 1.25rem; overflow-x: auto; }
-  .nav-tab { padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; font-family: 'DM Sans', sans-serif; transition: color 0.15s; white-space: nowrap; }
-  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .nav-tab:hover { color: var(--text); }
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: var(--bg);
+    }
 
-  .content { padding: 1.5rem 1.25rem; max-width: 540px; margin: 0 auto; }
-  .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-  .sec-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
-  .btn-add { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
-  .btn-add:hover { opacity: 0.88; }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 40px rgba(0, 0, 0, 0.06);
+    }
 
-  /* News */
-  .news-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 10px; position: relative; }
-  .news-card .tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; background: var(--accent-light); color: var(--accent-text); margin-bottom: 7px; }
-  .news-card .tag.urgent { background: var(--danger-light); color: var(--danger); }
-  .news-card .tag.info { background: var(--warning-light); color: var(--warning); }
-  .news-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-  .news-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-  .news-card .meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
-  .btn-del { position: absolute; top: 12px; right: 12px; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 2px 6px; border-radius: 6px; }
-  .btn-del:hover { background: var(--danger-light); color: var(--danger); }
+    .login-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 4px;
+    }
 
-  /* Poll */
-  .poll-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 12px; }
-  .poll-question { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-  .poll-meta { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
-  .poll-option { border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden; background: var(--bg); }
-  .poll-option:hover { border-color: var(--accent); }
-  .poll-option.voted { border-color: var(--accent); background: var(--accent-light); }
-  .poll-option-bar { position: absolute; top: 0; left: 0; height: 100%; background: var(--accent-light); z-index: 0; transition: width 0.4s ease; border-radius: 10px; }
-  .poll-option-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
-  .poll-option-label { font-size: 14px; font-weight: 500; }
-  .poll-option-pct { font-size: 12px; color: var(--accent-text); font-weight: 600; }
-  .poll-voters { font-size: 11px; color: var(--muted); margin-top: 10px; position: relative; z-index: 1; }
-  .poll-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; gap: 6px; }
-  .poll-total { font-size: 11px; color: var(--muted); }
-  .poll-close-btn { font-size: 11px; color: var(--danger); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+    .login-sub {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
 
-  /* Payment */
-  .pay-amount-box { background: var(--accent); border-radius: 16px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; color: white; }
-  .pay-amount-box .lbl { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
-  .pay-amount-box .amt { font-family: 'DM Serif Display', serif; font-size: 40px; }
-  .pay-amount-box .sublbl { font-size: 12px; opacity: 0.75; margin-top: 4px; }
-  .upi-apps-section { margin-bottom: 10px; }
-  .upi-apps-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-  .upi-apps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .upi-app-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.15s; text-decoration: none; color: var(--text); }
-  .upi-app-btn:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-1px); }
-  .upi-app-btn .app-icon { font-size: 26px; line-height: 1; }
-  .upi-app-btn .app-name { font-size: 11px; font-weight: 500; text-align: center; }
-  .upi-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-  .upi-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-  .upi-lbl { font-size: 11px; color: var(--muted); }
-  .upi-id { font-size: 15px; font-weight: 600; margin-top: 1px; word-break: break-all; }
-  .upi-copy { margin-left: auto; font-size: 11px; padding: 5px 10px; border-radius: 8px; background: var(--accent-light); color: var(--accent-text); border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; flex-shrink: 0; }
-  .scanner-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; text-align: center; margin-bottom: 10px; }
-  .scanner-img { width: 100%; max-width: 280px; height: auto; object-fit: contain; border-radius: 10px; }
-  .scanner-placeholder { width: 200px; height: 200px; background: var(--bg); border: 1px dashed var(--border); border-radius: 10px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); flex-direction: column; gap: 6px; }
-  .scanner-placeholder svg { opacity: 0.35; }
+    .form-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 5px;
+      display: block;
+    }
 
-  /* ── Dues card (member payment view) ── */
-  .dues-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 10px; }
-  .dues-card-header { padding: 12px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; }
-  .dues-entry-row { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .dues-entry-row:last-child { border-bottom: none; }
-  .dues-date { font-size: 12px; color: var(--muted); flex-shrink: 0; min-width: 80px; }
-  .dues-note { font-size: 12px; color: var(--text); flex: 1; min-width: 60px; }
-  .dues-amount { font-size: 14px; font-weight: 600; min-width: 65px; text-align: right; flex-shrink: 0; }
-  .dues-badge { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
-  .dues-badge.paid { background: var(--accent-light); color: var(--accent-text); }
-  .dues-badge.pending { background: var(--danger-light); color: var(--danger); }
-  .dues-empty { padding: 1.5rem; text-align: center; font-size: 13px; color: var(--muted); }
-  .dues-summary-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface2); flex-wrap: wrap; gap: 8px; }
-  .dues-summary-item { font-size: 12px; }
-  .dues-summary-item span { font-weight: 600; }
+    .form-group {
+      margin-bottom: 14px;
+    }
 
-  /* Admin */
-  .admin-section { margin-bottom: 1.5rem; }
-  .admin-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 8px; }
-  .admin-sec-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-  .member-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .member-row:last-child { border-bottom: none; }
-  .member-info { display: flex; align-items: center; gap: 10px; }
-  .member-av { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-light); color: var(--accent-text); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-  .member-name { font-size: 14px; font-weight: 500; }
-  .member-id { font-size: 11px; color: var(--muted); }
-  .btn-mark-paid, .btn-mark-pending { font-size: 12px; padding: 5px 10px; border-radius: 8px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; }
-  .btn-mark-paid { background: var(--accent-light); color: var(--accent-text); }
-  .btn-mark-pending { background: var(--danger-light); color: var(--danger); }
-  .settings-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .settings-row .form-input { flex: 1; }
-  .btn-save { padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; }
-  .btn-save:hover { opacity: 0.88; }
-  .person-amount-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 0; overflow: hidden; margin-bottom: 8px; }
-  .person-amount-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; background: var(--surface); transition: background 0.15s; }
-  .person-amount-header:hover { background: var(--surface2); }
-  .person-amount-header .member-av { flex-shrink: 0; }
-  .person-header-info { flex: 1; }
-  .person-total { font-size: 13px; font-weight: 600; color: var(--accent); }
-  .person-paid-count { font-size: 11px; color: var(--muted); }
-  .expand-icon { font-size: 12px; color: var(--muted); transition: transform 0.2s; }
-  .expand-icon.open { transform: rotate(180deg); }
-  .person-days-list { padding: 10px 14px; display: none; }
-  .person-days-list.open { display: block; }
-  .day-entry { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .day-entry:last-child { border-bottom: none; }
-  .day-label { font-size: 12px; color: var(--muted); flex: 1; min-width: 80px; }
-  .day-amount { font-size: 13px; font-weight: 500; color: var(--text); min-width: 50px; }
-  .day-status { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-  .day-status.paid { background: var(--accent-light); color: var(--accent-text); }
-  .day-status.pending { background: var(--danger-light); color: var(--danger); }
-  .day-toggle { font-size: 11px; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
-  .day-toggle:hover { background: var(--surface2); }
-  .day-del { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 14px; padding: 2px 4px; border-radius: 4px; }
-  .day-del:hover { color: var(--danger); background: var(--danger-light); }
-  .add-day-row { display: flex; align-items: center; gap: 6px; padding-top: 10px; margin-top: 4px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-  .add-day-input { flex: 1; min-width: 70px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); outline: none; }
-  .add-day-input:focus { border-color: var(--accent); }
-  .btn-add-day { padding: 7px 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; }
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.2s;
+      outline: none;
+    }
 
-  /* Modal */
-  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
-  .modal-bg.open { display: flex; }
-  .modal { background: var(--surface); border-radius: 18px; padding: 1.75rem; width: 100%; max-width: 380px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
-  .modal h2 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 1rem; }
-  .modal-btns { display: flex; gap: 8px; margin-top: 12px; }
-  .btn-cancel { flex: 1; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-  .btn-confirm { flex: 1; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-  .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: 14px; }
-  .empty-state .icon { font-size: 36px; margin-bottom: 8px; }
-  .upload-btn { display: inline-block; padding: 8px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; color: var(--text); }
-  select.form-input { appearance: none; }
-  .poll-opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-  .poll-opt-row .form-input { flex: 1; }
-  .btn-rm-opt { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; cursor: pointer; color: var(--muted); font-size: 14px; }
-  .btn-rm-opt:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger-light); }
-  .btn-add-opt { font-size: 13px; color: var(--accent); background: var(--accent-light); border: none; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; width: 100%; margin-top: 4px; }
+    .form-input:focus {
+      border-color: var(--accent);
+    }
 
-  /* Toast */
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: white; font-size: 13px; padding: 10px 20px; border-radius: 20px; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .btn-login {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
 
-  .notif-banner { background: var(--accent-light); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
-  .notif-banner-text { font-size: 13px; flex: 1; color: var(--accent-text); }
-  .btn-allow-notif { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-weight: 500; white-space: nowrap; }
-  .btn-dismiss-notif { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 2px 4px; }
-</style>
+    .btn-login:hover {
+      opacity: 0.88;
+    }
+
+    .login-error {
+      background: var(--danger-light);
+      color: var(--danger);
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+
+    #app {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      color: var(--accent);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      color: var(--accent-text);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .btn-logout {
+      font-size: 12px;
+      color: var(--muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-logout:hover {
+      background: var(--surface2);
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ccc;
+      display: inline-block;
+      margin-right: 2px;
+      transition: background 0.4s;
+    }
+
+    .sync-dot.synced {
+      background: #2D6A4F;
+    }
+
+    .sync-dot.syncing {
+      background: #D4860A;
+      animation: pulse 1s infinite;
+    }
+
+    .sync-dot.error {
+      background: #C0392B;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    .sync-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .btn-notif {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 8px;
+      cursor: pointer;
+      font-size: 16px;
+      position: relative;
+      transition: background 0.15s;
+    }
+
+    .btn-notif:hover {
+      background: var(--surface2);
+    }
+
+    .btn-notif.enabled {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .notif-dot {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 7px;
+      height: 7px;
+      background: var(--danger);
+      border-radius: 50%;
+      display: none;
+    }
+
+    .notif-dot.show {
+      display: block;
+    }
+
+    .nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      padding: 0 1.25rem;
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-family: 'DM Sans', sans-serif;
+      transition: color 0.15s;
+      white-space: nowrap;
+    }
+
+    .nav-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .nav-tab:hover {
+      color: var(--text);
+    }
+
+    .content {
+      padding: 1.5rem 1.25rem;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    .sec-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .sec-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+    }
+
+    .btn-add:hover {
+      opacity: 0.88;
+    }
+
+    /* News */
+    .news-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .news-card .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--accent-light);
+      color: var(--accent-text);
+      margin-bottom: 7px;
+    }
+
+    .news-card .tag.urgent {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .news-card .tag.info {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .news-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .news-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .news-card .meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .btn-del {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 16px;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .btn-del:hover {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    /* Poll */
+    .poll-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .poll-question {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .poll-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .poll-option {
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .poll-option:hover {
+      border-color: var(--accent);
+    }
+
+    .poll-option.voted {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .poll-option-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: var(--accent-light);
+      z-index: 0;
+      transition: width 0.4s ease;
+      border-radius: 10px;
+    }
+
+    .poll-option-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .poll-option-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .poll-option-pct {
+      font-size: 12px;
+      color: var(--accent-text);
+      font-weight: 600;
+    }
+
+    .poll-voters {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .poll-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .poll-total {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .poll-close-btn {
+      font-size: 11px;
+      color: var(--danger);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+    }
+
+    /* Payment */
+    .pay-amount-box {
+      background: var(--accent);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      color: white;
+    }
+
+    .pay-amount-box .lbl {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .pay-amount-box .amt {
+      font-family: 'DM Serif Display', serif;
+      font-size: 40px;
+    }
+
+    .pay-amount-box .sublbl {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+
+    .upi-apps-section {
+      margin-bottom: 10px;
+    }
+
+    .upi-apps-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .upi-apps-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .upi-app-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .upi-app-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      transform: translateY(-1px);
+    }
+
+    .upi-app-btn .app-icon {
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .upi-app-btn .app-name {
+      font-size: 11px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .upi-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .upi-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .upi-lbl {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .upi-id {
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 1px;
+      word-break: break-all;
+    }
+
+    .upi-copy {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      background: var(--accent-light);
+      color: var(--accent-text);
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .scanner-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .scanner-img {
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .scanner-placeholder {
+      width: 200px;
+      height: 200px;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--muted);
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .scanner-placeholder svg {
+      opacity: 0.35;
+    }
+
+    /* ── Dues card (member payment view) ── */
+    .dues-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .dues-card-header {
+      padding: 12px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .dues-entry-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .dues-entry-row:last-child {
+      border-bottom: none;
+    }
+
+    .dues-date {
+      font-size: 12px;
+      color: var(--muted);
+      flex-shrink: 0;
+      min-width: 80px;
+    }
+
+    .dues-note {
+      font-size: 12px;
+      color: var(--text);
+      flex: 1;
+      min-width: 60px;
+    }
+
+    .dues-amount {
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 65px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .dues-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .dues-badge.paid {
+      background: var(--accent-light);
+      color: var(--accent-text);
+    }
+
+    .dues-badge.pending {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .dues-empty {
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .dues-summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface2);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .dues-summary-item {
+      font-size: 12px;
+    }
+
+    .dues-summary-item span {
+      font-weight: 600;
+    }
+
+    /* Admin */
+    .admin-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .admin-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 8px;
+    }
+
+    .admin-sec-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .member-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .member-row:last-child {
+      border-bottom: none;
+    }
+
+    .member-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .member-av {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      color: var(--accent-text);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .member-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .member-id {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .btn-mark-paid,
+    .btn-mark-pending {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+    }
+
+    .btn-mark-paid {
+      background: var(--accent-light);
+      color: var(--accent-text);
+    }
+
+    .btn-mark-pending {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .settings-row .form-input {
+      flex: 1;
+    }
+
+    .btn-save {
+      padding: 10px 18px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-save:hover {
+      opacity: 0.88;
+    }
+
+    .person-amount-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .person-amount-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--surface);
+      transition: background 0.15s;
+    }
+
+    .person-amount-header:hover {
+      background: var(--surface2);
+    }
+
+    .person-amount-header .member-av {
+      flex-shrink: 0;
+    }
+
+    .person-header-info {
+      flex: 1;
+    }
+
+    .person-total {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .person-paid-count {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .expand-icon {
+      font-size: 12px;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+
+    .expand-icon.open {
+      transform: rotate(180deg);
+    }
+
+    .person-days-list {
+      padding: 10px 14px;
+      display: none;
+    }
+
+    .person-days-list.open {
+      display: block;
+    }
+
+    .day-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .day-entry:last-child {
+      border-bottom: none;
+    }
+
+    .day-label {
+      font-size: 12px;
+      color: var(--muted);
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .day-amount {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      min-width: 50px;
+    }
+
+    .day-status {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .day-status.paid {
+      background: var(--accent-light);
+      color: var(--accent-text);
+    }
+
+    .day-status.pending {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .day-toggle {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      background: var(--bg);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .day-toggle:hover {
+      background: var(--surface2);
+    }
+
+    .day-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .day-del:hover {
+      color: var(--danger);
+      background: var(--danger-light);
+    }
+
+    .add-day-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-top: 10px;
+      margin-top: 4px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .add-day-input {
+      flex: 1;
+      min-width: 70px;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+
+    .add-day-input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-add-day {
+      padding: 7px 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Modal */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-bg.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 380px;
+      border: 1px solid var(--border);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      margin-bottom: 1rem;
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-confirm {
+      flex: 1;
+      padding: 10px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .empty-state .icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .upload-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+    }
+
+    select.form-input {
+      appearance: none;
+    }
+
+    .poll-opt-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .poll-opt-row .form-input {
+      flex: 1;
+    }
+
+    .btn-rm-opt {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .btn-rm-opt:hover {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: var(--danger-light);
+    }
+
+    .btn-add-opt {
+      font-size: 13px;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: white;
+      font-size: 13px;
+      padding: 10px 20px;
+      border-radius: 20px;
+      z-index: 999;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .notif-banner {
+      background: var(--accent-light);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notif-banner-text {
+      font-size: 13px;
+      flex: 1;
+      color: var(--accent-text);
+    }
+
+    .btn-allow-notif {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .btn-dismiss-notif {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 16px;
+      padding: 2px 4px;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="toast" id="toast"></div>
+  <div class="toast" id="toast"></div>
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">🏠 Room Portal</div>
-    <div class="login-sub">Gnanesh's Place — Member Login</div>
-    <div class="form-group">
-      <label class="form-label">Your Name / ID</label>
-      <input class="form-input" id="login-id" type="text" placeholder="e.g. Bhan" autocomplete="off"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input class="form-input" id="login-pass" type="password" placeholder="Enter your password"/>
-    </div>
-    <button class="btn-login" onclick="doLogin()">Sign In</button>
-    <div class="login-error" id="login-error">Incorrect ID or password. Please try again.</div>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-logo">🏠 Room Portal</div>
-    <div class="topbar-right">
-      <button class="btn-notif" id="btn-notif" onclick="requestNotifPermission()" title="Enable notifications" style="display:none;">
-        🔔<span class="notif-dot" id="notif-dot"></span>
-      </button>
-      <div class="topbar-user">
-        <span id="sync-indicator" title="Sync status" style="display:none;align-items:center;gap:3px;"><span class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">…</span></span>
-        <div class="user-avatar" id="top-avatar">GN</div>
-        <span class="user-name" id="top-name">Gnanesh</span>
-        <button class="btn-logout" onclick="doLogout()">Logout</button>
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-logo">🏠 Room Portal</div>
+      <div class="login-sub">Gnanesh's Place — Member Login</div>
+      <div class="form-group">
+        <label class="form-label">Your Name / ID</label>
+        <input class="form-input" id="login-id" type="text" placeholder="e.g. Bhan" autocomplete="off" />
       </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="login-pass" type="password" placeholder="Enter your password" />
+      </div>
+      <button class="btn-login" onclick="doLogin()">Sign In</button>
+      <div class="login-error" id="login-error">Incorrect ID or password. Please try again.</div>
     </div>
   </div>
 
-  <div class="nav" id="main-nav">
-    <button class="nav-tab active" onclick="showTab('news')">📢 News</button>
-    <button class="nav-tab" onclick="showTab('dinner')">🍽 Dinner</button>
-    <button class="nav-tab" onclick="showTab('pay')">💳 Payment</button>
-    <button class="nav-tab" id="admin-tab" style="display:none;" onclick="showTab('admin')">⚙️ Admin</button>
-  </div>
-
-  <div class="content" id="tab-news">
-    <div class="sec-head">
-      <div class="sec-title">Notices</div>
-      <button class="btn-add" id="add-news-btn" style="display:none;" onclick="openModal('modal-news')">+ Post</button>
-    </div>
-    <div id="notif-banner-container"></div>
-    <div id="news-list"></div>
-  </div>
-
-  <div class="content" id="tab-dinner" style="display:none;">
-    <div class="sec-head">
-      <div class="sec-title">Tonight's Dinner</div>
-      <button class="btn-add" id="create-poll-btn" style="display:none;" onclick="openModal('modal-poll')">+ Poll</button>
-    </div>
-    <div id="dinner-display"></div>
-  </div>
-
-  <div class="content" id="tab-pay" style="display:none;">
-    <div class="sec-head"><div class="sec-title">Payment</div></div>
-    <div id="pay-display"></div>
-  </div>
-
-  <div class="content" id="tab-admin" style="display:none;">
-    <div class="sec-title" style="margin-bottom:1.25rem;">Admin Panel</div>
-
-    <div class="admin-section">
-      <div class="admin-sec-label">🔔 Firebase Push Config</div>
-      <div class="admin-card">
-        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Paste your Firebase VAPID key below to enable push notifications for members.</p>
-        <div class="form-group" style="margin-bottom:0;">
-          <label class="form-label">VAPID Key</label>
-          <div class="settings-row">
-            <input class="form-input" id="set-vapid" type="text" placeholder="BNdK...your VAPID key here"/>
-            <button class="btn-save" onclick="saveVapid()">Save</button>
-          </div>
+  <!-- APP -->
+  <div id="app">
+    <div class="topbar">
+      <div class="topbar-logo">🏠 Room Portal</div>
+      <div class="topbar-right">
+        <button class="btn-notif" id="btn-notif" onclick="requestNotifPermission()" title="Enable notifications"
+          style="display:none;">
+          🔔<span class="notif-dot" id="notif-dot"></span>
+        </button>
+        <div class="topbar-user">
+          <span id="sync-indicator" title="Sync status" style="display:none;align-items:center;gap:3px;"><span
+              class="sync-dot" id="sync-dot"></span><span class="sync-label" id="sync-label">…</span></span>
+          <div class="user-avatar" id="top-avatar">GN</div>
+          <span class="user-name" id="top-name">Gnanesh</span>
+          <button class="btn-logout" onclick="doLogout()">Logout</button>
         </div>
       </div>
     </div>
 
-    <div class="admin-section">
-      <div class="admin-sec-label">Payment Settings</div>
-      <div class="admin-card">
-        <div class="form-group">
-          <label class="form-label">UPI ID</label>
-          <div class="settings-row">
-            <input class="form-input" id="set-upi" type="text" placeholder="yourname@ybl"/>
-            <button class="btn-save" onclick="saveUPI()">Save</button>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label class="form-label">QR / Scanner Image</label>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
-            <div id="scanner-preview-admin"></div>
-            <label class="upload-btn">Upload QR <input type="file" accept="image/*" style="display:none;" onchange="uploadScanner(event)"/></label>
+    <div class="nav" id="main-nav">
+      <button class="nav-tab active" onclick="showTab('news')">📢 News</button>
+      <button class="nav-tab" onclick="showTab('dinner')">🍽 Dinner</button>
+      <button class="nav-tab" onclick="showTab('pay')">💳 Payment</button>
+      <button class="nav-tab" id="admin-tab" style="display:none;" onclick="showTab('admin')">⚙️ Admin</button>
+    </div>
+
+    <div class="content" id="tab-news">
+      <div class="sec-head">
+        <div class="sec-title">Notices</div>
+        <button class="btn-add" id="add-news-btn" style="display:none;" onclick="openModal('modal-news')">+
+          Post</button>
+      </div>
+      <div id="notif-banner-container"></div>
+      <div id="news-list"></div>
+    </div>
+
+    <div class="content" id="tab-dinner" style="display:none;">
+      <div class="sec-head">
+        <div class="sec-title">Tonight's Dinner</div>
+        <button class="btn-add" id="create-poll-btn" style="display:none;" onclick="openModal('modal-poll')">+
+          Poll</button>
+      </div>
+      <div id="dinner-display"></div>
+    </div>
+
+    <div class="content" id="tab-pay" style="display:none;">
+      <div class="sec-head">
+        <div class="sec-title">Payment</div>
+      </div>
+      <div id="pay-display"></div>
+    </div>
+
+    <div class="content" id="tab-admin" style="display:none;">
+      <div class="sec-title" style="margin-bottom:1.25rem;">Admin Panel</div>
+
+      <div class="admin-section">
+        <div class="admin-sec-label">🔔 Firebase Push Config</div>
+        <div class="admin-card">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Paste your Firebase VAPID key below to enable
+            push notifications for members.</p>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">VAPID Key</label>
+            <div class="settings-row">
+              <input class="form-input" id="set-vapid" type="text" placeholder="BNdK...your VAPID key here" />
+              <button class="btn-save" onclick="saveVapid()">Save</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="admin-section">
-      <div class="admin-sec-label">Members — Daily Amount Tracker</div>
-      <div id="person-amounts-list"></div>
-    </div>
-
-    <div class="admin-section">
-      <div class="admin-sec-label">Members Payment Status (This Month)</div>
-      <div class="admin-card" id="members-status-list"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Post News -->
-<div class="modal-bg" id="modal-news">
-  <div class="modal">
-    <h2>Post a Notice</h2>
-    <div class="form-group">
-      <label class="form-label">Type</label>
-      <select class="form-input" id="news-type">
-        <option value="notice">Notice</option>
-        <option value="urgent">Urgent</option>
-        <option value="info">Info</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Title</label>
-      <input class="form-input" id="news-title" placeholder="e.g. Water supply off tomorrow"/>
-    </div>
-    <div class="form-group" style="margin-bottom:0;">
-      <label class="form-label">Details</label>
-      <textarea class="form-input" id="news-body" rows="3" style="resize:none;height:80px;" placeholder="Write more details here..."></textarea>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal('modal-news')">Cancel</button>
-      <button class="btn-confirm" onclick="postNews()">Post</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Create Dinner Poll -->
-<div class="modal-bg" id="modal-poll">
-  <div class="modal">
-    <h2>Create Dinner Poll</h2>
-    <div class="form-group">
-      <label class="form-label">Question</label>
-      <input class="form-input" id="poll-question" placeholder="e.g. What's for dinner tonight?"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Options</label>
-      <div id="poll-options-list">
-        <div class="poll-opt-row"><input class="form-input" placeholder="Option 1"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button></div>
-        <div class="poll-opt-row"><input class="form-input" placeholder="Option 2"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button></div>
-        <div class="poll-opt-row"><input class="form-input" placeholder="Option 3"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button></div>
+      <div class="admin-section">
+        <div class="admin-sec-label">Payment Settings</div>
+        <div class="admin-card">
+          <div class="form-group">
+            <label class="form-label">UPI ID</label>
+            <div class="settings-row">
+              <input class="form-input" id="set-upi" type="text" placeholder="yourname@ybl" />
+              <button class="btn-save" onclick="saveUPI()">Save</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">QR / Scanner Image</label>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+              <div id="scanner-preview-admin"></div>
+              <label class="upload-btn">Upload QR <input type="file" accept="image/*" style="display:none;"
+                  onchange="uploadScanner(event)" /></label>
+            </div>
+          </div>
+        </div>
       </div>
-      <button class="btn-add-opt" onclick="addPollOpt()">+ Add Option</button>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal('modal-poll')">Cancel</button>
-      <button class="btn-confirm" onclick="createPoll()">Create Poll</button>
+
+      <div class="admin-section">
+        <div class="admin-sec-label">Members — Daily Amount Tracker</div>
+        <div id="person-amounts-list"></div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-sec-label">Members Payment Status (This Month)</div>
+        <div class="admin-card" id="members-status-list"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- FIREBASE SDK -->
-<!-- ╔══════════════════════════════════════════════════════════╗
+  <!-- Modal: Post News -->
+  <div class="modal-bg" id="modal-news">
+    <div class="modal">
+      <h2>Post a Notice</h2>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-input" id="news-type">
+          <option value="notice">Notice</option>
+          <option value="urgent">Urgent</option>
+          <option value="info">Info</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input class="form-input" id="news-title" placeholder="e.g. Water supply off tomorrow" />
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Details</label>
+        <textarea class="form-input" id="news-body" rows="3" style="resize:none;height:80px;"
+          placeholder="Write more details here..."></textarea>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal('modal-news')">Cancel</button>
+        <button class="btn-confirm" onclick="postNews()">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create Dinner Poll -->
+  <div class="modal-bg" id="modal-poll">
+    <div class="modal">
+      <h2>Create Dinner Poll</h2>
+      <div class="form-group">
+        <label class="form-label">Question</label>
+        <input class="form-input" id="poll-question" placeholder="e.g. What's for dinner tonight?" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Options</label>
+        <div id="poll-options-list">
+          <div class="poll-opt-row"><input class="form-input" placeholder="Option 1" /><button class="btn-rm-opt"
+              onclick="removePollOpt(this)">✕</button></div>
+          <div class="poll-opt-row"><input class="form-input" placeholder="Option 2" /><button class="btn-rm-opt"
+              onclick="removePollOpt(this)">✕</button></div>
+          <div class="poll-opt-row"><input class="form-input" placeholder="Option 3" /><button class="btn-rm-opt"
+              onclick="removePollOpt(this)">✕</button></div>
+        </div>
+        <button class="btn-add-opt" onclick="addPollOpt()">+ Add Option</button>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal('modal-poll')">Cancel</button>
+        <button class="btn-confirm" onclick="createPoll()">Create Poll</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIREBASE SDK -->
+  <!-- ╔══════════════════════════════════════════════════════════╗
      ║  FIX 1 — Firebase module must run BEFORE initApp()      ║
      ║  type="module" scripts are deferred by the browser,     ║
      ║  so we mark it with an id and await a readiness flag.   ║
      ╚══════════════════════════════════════════════════════════╝ -->
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getMessaging, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
-  import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getMessaging, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDTvdt-xueov5P-RxD7kl4n3FtlwYrQ1Qw",
-    authDomain: "homies-f3af3.firebaseapp.com",
-    projectId: "homies-f3af3",
-    storageBucket: "homies-f3af3.firebasestorage.app",
-    messagingSenderId: "274559235191",
-    appId: "1:274559235191:web:cab73238629e2f05884272"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTvdt-xueov5P-RxD7kl4n3FtlwYrQ1Qw",
+      authDomain: "homies-f3af3.firebaseapp.com",
+      projectId: "homies-f3af3",
+      storageBucket: "homies-f3af3.firebasestorage.app",
+      messagingSenderId: "274559235191",
+      appId: "1:274559235191:web:cab73238629e2f05884272"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  window._fbApp = app;
-  window._fbDb = db;
-  window._stateDocRef = doc(db, 'roomPortal', 'mainState');
+    window._fbApp = app;
+    window._fbDb = db;
+    window._stateDocRef = doc(db, 'roomPortal', 'mainState');
 
-  window._loadSharedState = async function () {
-    const snap = await getDoc(window._stateDocRef);
-    if (!snap.exists()) return null;
-    const data = snap.data();
-    // FIX: scanner is stored locally only (base64 can exceed Firestore 1MB limit)
-    try { const local = localStorage.getItem('rp_scanner'); if (local) data.scanner = local; } catch(e) {}
-    return data;
-  };
+    window._loadSharedState = async function () {
+      const snap = await getDoc(window._stateDocRef);
+      if (!snap.exists()) return null;
+      const data = snap.data();
+      // FIX: scanner is stored locally only (base64 can exceed Firestore 1MB limit)
+      try { const local = localStorage.getItem('rp_scanner'); if (local) data.scanner = local; } catch (e) { }
+      return data;
+    };
 
-  window._saveSharedState = async function (nextState) {
-    const payload = JSON.parse(JSON.stringify(nextState));
-    // FIX: strip scanner from Firestore — save it to localStorage instead
-    if (payload.scanner) {
-      try { localStorage.setItem('rp_scanner', payload.scanner); } catch(e) {}
-      delete payload.scanner;
-    }
-    payload.updatedAt = serverTimestamp();
-    await setDoc(window._stateDocRef, payload, { merge: false });
-  };
-
-  window._watchSharedState = function (callback) {
-    return onSnapshot(window._stateDocRef, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        // Re-attach locally stored scanner
-        try { const local = localStorage.getItem('rp_scanner'); if (local) data.scanner = local; } catch(e) {}
-        callback(data);
+    window._saveSharedState = async function (nextState) {
+      const payload = JSON.parse(JSON.stringify(nextState));
+      // FIX: strip scanner from Firestore — save it to localStorage instead
+      if (payload.scanner) {
+        try { localStorage.setItem('rp_scanner', payload.scanner); } catch (e) { }
+        delete payload.scanner;
       }
-    });
-  };
+      payload.updatedAt = serverTimestamp();
+      await setDoc(window._stateDocRef, payload, { merge: false });
+    };
 
-  // Signal that Firebase is ready for initApp()
-  window._fbReady = true;
-  document.dispatchEvent(new Event('fb-ready'));
+    window._watchSharedState = function (callback) {
+      return onSnapshot(window._stateDocRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          // Re-attach locally stored scanner
+          try { const local = localStorage.getItem('rp_scanner'); if (local) data.scanner = local; } catch (e) { }
+          callback(data);
+        }
+      });
+    };
 
-  try {
-    const messaging = getMessaging(app);
-    window._fbMessaging = messaging;
-    onMessage(messaging, (payload) => {
-      const title = payload.notification?.title || '🏠 Room Portal';
-      const body  = payload.notification?.body  || 'New update!';
-      if(typeof showToast === 'function') showToast(`🔔 ${title}: ${body}`);
-      // Refresh current view safely
-      if(typeof rerenderCurrentView === 'function') rerenderCurrentView();
-    });
-  } catch (e) {
-    console.warn('[Firebase Messaging]', e);
-  }
-</script>
+    // Signal that Firebase is ready for initApp()
+    window._fbReady = true;
+    document.dispatchEvent(new Event('fb-ready'));
 
-<script>
-// ── USERS ──
-const USERS = {
-  'Gnanesh': { pass: 'Admin#0530',    role: 'admin',  initials: 'GN' },
-  'Bhan':    { pass: 'BHAN@15',       role: 'member', initials: 'BH' },
-  'Hari':    { pass: 'HARI@31',       role: 'member', initials: 'HR' },
-  'Yogi':    { pass: 'YOGI@01',       role: 'member', initials: 'YG' },
-  'Ashraf':  { pass: 'ASHRAF@21',     role: 'member', initials: 'AS' },
-  'Sai':     { pass: 'JAYADEEP_SAI',  role: 'member', initials: 'SI' }
-};
-const MEMBERS = ['Bhan','Hari','Yogi','Ashraf','Sai'];
-
-// ── STATE ──
-const DEFAULT_STATE = { news:[], polls:[], upi:'', scanner:'', payStatus:{}, personAmounts:{}, vapidKey:'', fcmTokens:[] };
-let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-let _unsubscribeSharedState = null;
-
-function normalizeState(data) {
-  const next = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...(data || {}) };
-  MEMBERS.forEach(m => {
-    if(!next.payStatus[m])     next.payStatus[m]     = {};
-    if(!next.personAmounts[m]) next.personAmounts[m] = [];
-  });
-  if(!Array.isArray(next.news))      next.news      = [];
-  if(!Array.isArray(next.polls))     next.polls     = [];
-  if(!Array.isArray(next.fcmTokens)) next.fcmTokens = [];
-  if(typeof next.upi !== 'string')      next.upi = '';
-  if(typeof next.scanner !== 'string')  next.scanner = '';
-  if(typeof next.vapidKey !== 'string') next.vapidKey = '';
-  delete next.updatedAt;
-  return next;
-}
-
-async function loadState() {
-  try {
-    if(window._loadSharedState) {
-      const remote = await window._loadSharedState();
-      state = normalizeState(remote);
-      console.log('[Firestore] State loaded OK');
-    } else {
-      // Firebase not ready yet — use defaults
-      state = normalizeState(DEFAULT_STATE);
+    try {
+      const messaging = getMessaging(app);
+      window._fbMessaging = messaging;
+      onMessage(messaging, (payload) => {
+        const title = payload.notification?.title || '🏠 Room Portal';
+        const body = payload.notification?.body || 'New update!';
+        if (typeof showToast === 'function') showToast(`🔔 ${title}: ${body}`);
+        // Refresh current view safely
+        if (typeof rerenderCurrentView === 'function') rerenderCurrentView();
+      });
+    } catch (e) {
+      console.warn('[Firebase Messaging]', e);
     }
-  } catch(e) {
-    console.warn('[Firestore load error]', e);
-    state = normalizeState(DEFAULT_STATE);
-    // FIX: Show a more helpful error message with likely cause
-    if(e?.code === 'permission-denied') {
-      showToast('⚠️ Firestore: permission denied — fix your Security Rules (see setup guide)');
-    } else if(e?.code?.includes('unavailable') || e?.name === 'FirebaseError') {
-      showToast('⚠️ Firestore unavailable — check your internet connection');
-    } else {
-      showToast('⚠️ Could not load shared data — data may be out of sync');
+  </script>
+
+  <script>
+    // ── USERS ──
+    const USERS = {
+      'Gnanesh': { pass: 'Admin#0530', role: 'admin', initials: 'GN' },
+      'Bhan': { pass: 'BHAN@15', role: 'member', initials: 'BH' },
+      'Hari': { pass: 'HARI@31', role: 'member', initials: 'HR' },
+      'Yogi': { pass: 'YOGI@01', role: 'member', initials: 'YG' },
+      'Ashraf': { pass: 'ASHRAF@21', role: 'member', initials: 'AS' },
+      'Sai': { pass: 'JAYADEEP_SAI', role: 'member', initials: 'SI' }
+    };
+    const MEMBERS = ['Bhan', 'Hari', 'Yogi', 'Ashraf', 'Sai'];
+
+    // ── STATE ──
+    const DEFAULT_STATE = { news: [], polls: [], upi: '', scanner: '', payStatus: {}, personAmounts: {}, vapidKey: '', fcmTokens: [] };
+    let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    let _unsubscribeSharedState = null;
+
+    function normalizeState(data) {
+      const next = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...(data || {}) };
+      MEMBERS.forEach(m => {
+        if (!next.payStatus[m]) next.payStatus[m] = {};
+        if (!next.personAmounts[m]) next.personAmounts[m] = [];
+      });
+      if (!Array.isArray(next.news)) next.news = [];
+      if (!Array.isArray(next.polls)) next.polls = [];
+      if (!Array.isArray(next.fcmTokens)) next.fcmTokens = [];
+      if (typeof next.upi !== 'string') next.upi = '';
+      if (typeof next.scanner !== 'string') next.scanner = '';
+      if (typeof next.vapidKey !== 'string') next.vapidKey = '';
+      delete next.updatedAt;
+      return next;
     }
-  }
-}
 
-function setSyncStatus(status) {
-  const dot = document.getElementById('sync-dot');
-  const lbl = document.getElementById('sync-label');
-  const ind = document.getElementById('sync-indicator');
-  if(!dot||!lbl||!ind) return;
-  ind.style.display = 'flex';
-  dot.className = 'sync-dot ' + status;
-  lbl.textContent = status === 'synced' ? 'Synced' : status === 'syncing' ? 'Saving…' : 'Sync error';
-}
+    async function loadState() {
+      try {
+        if (window._loadSharedState) {
+          const remote = await window._loadSharedState();
+          state = normalizeState(remote);
+          console.log('[Firestore] State loaded OK');
+        } else {
+          // Firebase not ready yet — use defaults
+          state = normalizeState(DEFAULT_STATE);
+        }
+      } catch (e) {
+        console.warn('[Firestore load error]', e);
+        state = normalizeState(DEFAULT_STATE);
+        // FIX: Show a more helpful error message with likely cause
+        if (e?.code === 'permission-denied') {
+          showToast('⚠️ Firestore: permission denied — fix your Security Rules (see setup guide)');
+        } else if (e?.code?.includes('unavailable') || e?.name === 'FirebaseError') {
+          showToast('⚠️ Firestore unavailable — check your internet connection');
+        } else {
+          showToast('⚠️ Could not load shared data — data may be out of sync');
+        }
+      }
+    }
 
-async function saveState() {
-  try {
-    if(window._saveSharedState) {
-      setSyncStatus('syncing');
-      await window._saveSharedState(normalizeState(state));
+    function setSyncStatus(status) {
+      const dot = document.getElementById('sync-dot');
+      const lbl = document.getElementById('sync-label');
+      const ind = document.getElementById('sync-indicator');
+      if (!dot || !lbl || !ind) return;
+      ind.style.display = 'flex';
+      dot.className = 'sync-dot ' + status;
+      lbl.textContent = status === 'synced' ? 'Synced' : status === 'syncing' ? 'Saving…' : 'Sync error';
+    }
+
+    async function saveState() {
+      try {
+        if (window._saveSharedState) {
+          setSyncStatus('syncing');
+          await window._saveSharedState(normalizeState(state));
+          setSyncStatus('synced');
+        }
+        return true;
+      } catch (e) {
+        setSyncStatus('error');
+        console.warn('[Firestore save]', e);
+        if (e?.code === 'permission-denied') {
+          showToast('⚠️ Blocked by Firestore rules — re-check your rules in Firebase Console');
+        } else {
+          showToast('⚠️ Sync failed — check internet connection');
+        }
+        throw e;
+      }
+    }
+
+    function subscribeSharedState() {
+      if (!window._watchSharedState) return;
+      if (_unsubscribeSharedState) _unsubscribeSharedState();
+      _unsubscribeSharedState = window._watchSharedState((remote) => {
+        state = normalizeState(remote);
+        setSyncStatus('synced');
+        if (currentUser) rerenderCurrentView();
+      });
       setSyncStatus('synced');
     }
-    return true;
-  } catch(e) {
-    setSyncStatus('error');
-    console.warn('[Firestore save]', e);
-    if(e?.code === 'permission-denied') {
-      showToast('⚠️ Blocked by Firestore rules — re-check your rules in Firebase Console');
-    } else {
-      showToast('⚠️ Sync failed — check internet connection');
+
+    function rerenderCurrentView() {
+      if (!currentUser) return;
+      if (currentUser.role === 'admin' && currentTab === 'admin') loadAdminPanel();
+      if (currentTab === 'news') { renderNews(); if (currentUser.role !== 'admin') renderNotifBanner(); }
+      if (currentTab === 'dinner') renderDinner();
+      if (currentTab === 'pay') renderPay();
     }
-    throw e;
-  }
-}
 
-function subscribeSharedState() {
-  if(!window._watchSharedState) return;
-  if(_unsubscribeSharedState) _unsubscribeSharedState();
-  _unsubscribeSharedState = window._watchSharedState((remote) => {
-    state = normalizeState(remote);
-    setSyncStatus('synced');
-    if(currentUser) rerenderCurrentView();
-  });
-  setSyncStatus('synced');
-}
+    // ── SESSION PERSISTENCE ──
+    // Uses sessionStorage so session is cleared when browser tab is fully closed,
+    // but survives page refreshes (F5 / pull-to-refresh).
+    const SESSION_KEY = 'rp_session';
+    function saveSession(userName, tabName) {
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: userName, tab: tabName || 'news' })); } catch (e) { }
+    }
+    function loadSession() {
+      try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch (e) { return null; }
+    }
+    function clearSession() { try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { } }
 
-function rerenderCurrentView() {
-  if(!currentUser) return;
-  if(currentUser.role === 'admin' && currentTab === 'admin') loadAdminPanel();
-  if(currentTab === 'news')   { renderNews(); if(currentUser.role !== 'admin') renderNotifBanner(); }
-  if(currentTab === 'dinner') renderDinner();
-  if(currentTab === 'pay')    renderPay();
-}
+    // ── AUTH ──
+    let currentUser = null;
+    let currentTab = 'news';
 
-// ── SESSION PERSISTENCE ──
-// Uses sessionStorage so session is cleared when browser tab is fully closed,
-// but survives page refreshes (F5 / pull-to-refresh).
-const SESSION_KEY = 'rp_session';
-function saveSession(userName, tabName) {
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: userName, tab: tabName || 'news' })); } catch(e) {}
-}
-function loadSession() {
-  try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch(e) { return null; }
-}
-function clearSession() { try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {} }
+    function doLogin() {
+      const id = document.getElementById('login-id').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      const user = USERS[id];
+      if (user && user.pass === pass) {
+        currentUser = { name: id, ...user };
+        document.getElementById('login-error').style.display = 'none';
+        document.getElementById('login-id').value = '';
+        document.getElementById('login-pass').value = '';
+        startApp('news');
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    }
 
-// ── AUTH ──
-let currentUser = null;
-let currentTab  = 'news';
+    function doLogout() {
+      clearSession();
+      currentUser = null;
+      currentTab = 'news';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+    }
 
-function doLogin() {
-  const id   = document.getElementById('login-id').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const user = USERS[id];
-  if(user && user.pass === pass) {
-    currentUser = { name: id, ...user };
-    document.getElementById('login-error').style.display = 'none';
-    document.getElementById('login-id').value   = '';
-    document.getElementById('login-pass').value = '';
-    startApp('news');
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-  }
-}
+    function startApp(tabToShow) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('top-avatar').textContent = currentUser.initials;
+      document.getElementById('top-name').textContent = currentUser.name;
 
-function doLogout() {
-  clearSession();
-  currentUser = null;
-  currentTab  = 'news';
-  document.getElementById('app').style.display          = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-}
+      const isAdmin = currentUser.role === 'admin';
+      document.getElementById('admin-tab').style.display = isAdmin ? '' : 'none';
+      document.getElementById('add-news-btn').style.display = isAdmin ? '' : 'none';
+      document.getElementById('create-poll-btn').style.display = isAdmin ? '' : 'none';
 
-function startApp(tabToShow) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display          = 'block';
-  document.getElementById('top-avatar').textContent     = currentUser.initials;
-  document.getElementById('top-name').textContent       = currentUser.name;
+      if (!isAdmin) { document.getElementById('btn-notif').style.display = ''; updateNotifBellState(); }
 
-  const isAdmin = currentUser.role === 'admin';
-  document.getElementById('admin-tab').style.display       = isAdmin ? '' : 'none';
-  document.getElementById('add-news-btn').style.display    = isAdmin ? '' : 'none';
-  document.getElementById('create-poll-btn').style.display = isAdmin ? '' : 'none';
+      // Prevent non-admins landing on admin tab after restore
+      const target = (tabToShow === 'admin' && !isAdmin) ? 'news' : (tabToShow || 'news');
+      showTab(target);
+      if (isAdmin) loadAdminPanel();
+      registerSW();
+    }
 
-  if(!isAdmin) { document.getElementById('btn-notif').style.display = ''; updateNotifBellState(); }
+    // ── SERVICE WORKER & FCM ──
+    function registerSW() {
+      if ('serviceWorker' in navigator)
+        navigator.serviceWorker.register('./firebase-messaging-sw.js').catch(e => console.warn('[SW]', e));
+    }
+    function updateNotifBellState() {
+      const btn = document.getElementById('btn-notif'), dot = document.getElementById('notif-dot');
+      if (!btn) return;
+      const p = Notification.permission;
+      btn.classList.toggle('enabled', p === 'granted');
+      dot.classList.toggle('show', p !== 'granted');
+      btn.title = p === 'granted' ? 'Notifications enabled ✓' : p === 'denied' ? 'Blocked — enable in browser settings' : 'Tap to enable notifications';
+    }
+    async function requestNotifPermission() {
+      if (!('Notification' in window)) { showToast('Not supported in this browser'); return; }
+      if (Notification.permission === 'denied') { showToast('Blocked — enable in browser/phone settings'); return; }
+      if (Notification.permission === 'granted') { await subscribeFCM(); showToast('Notifications already enabled ✓'); updateNotifBellState(); hideBanner(); return; }
+      const p = await Notification.requestPermission();
+      updateNotifBellState();
+      if (p === 'granted') { await subscribeFCM(); showToast('🔔 Notifications enabled!'); hideBanner(); }
+      else showToast('Notification permission denied');
+    }
+    async function subscribeFCM() {
+      if (!state.vapidKey || !window._fbMessaging) return;
+      try {
+        const sw = await navigator.serviceWorker.ready;
+        const tok = await getTokenFCM(window._fbMessaging, { vapidKey: state.vapidKey, serviceWorkerRegistration: sw });
+        if (tok && !state.fcmTokens.includes(tok)) { state.fcmTokens.push(tok); saveState(); }
+      } catch (e) { console.warn('[FCM]', e); }
+    }
+    async function getTokenFCM(messaging, opts) {
+      const { getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
+      return getToken(messaging, opts);
+    }
 
-  // Prevent non-admins landing on admin tab after restore
-  const target = (tabToShow === 'admin' && !isAdmin) ? 'news' : (tabToShow || 'news');
-  showTab(target);
-  if(isAdmin) loadAdminPanel();
-  registerSW();
-}
-
-// ── SERVICE WORKER & FCM ──
-function registerSW() {
-  if('serviceWorker' in navigator)
-    navigator.serviceWorker.register('./firebase-messaging-sw.js').catch(e => console.warn('[SW]', e));
-}
-function updateNotifBellState() {
-  const btn = document.getElementById('btn-notif'), dot = document.getElementById('notif-dot');
-  if(!btn) return;
-  const p = Notification.permission;
-  btn.classList.toggle('enabled', p === 'granted');
-  dot.classList.toggle('show', p !== 'granted');
-  btn.title = p === 'granted' ? 'Notifications enabled ✓' : p === 'denied' ? 'Blocked — enable in browser settings' : 'Tap to enable notifications';
-}
-async function requestNotifPermission() {
-  if(!('Notification' in window)) { showToast('Not supported in this browser'); return; }
-  if(Notification.permission === 'denied') { showToast('Blocked — enable in browser/phone settings'); return; }
-  if(Notification.permission === 'granted') { await subscribeFCM(); showToast('Notifications already enabled ✓'); updateNotifBellState(); hideBanner(); return; }
-  const p = await Notification.requestPermission();
-  updateNotifBellState();
-  if(p === 'granted') { await subscribeFCM(); showToast('🔔 Notifications enabled!'); hideBanner(); }
-  else showToast('Notification permission denied');
-}
-async function subscribeFCM() {
-  if(!state.vapidKey || !window._fbMessaging) return;
-  try {
-    const sw  = await navigator.serviceWorker.ready;
-    const tok = await getTokenFCM(window._fbMessaging, { vapidKey: state.vapidKey, serviceWorkerRegistration: sw });
-    if(tok && !state.fcmTokens.includes(tok)) { state.fcmTokens.push(tok); saveState(); }
-  } catch(e) { console.warn('[FCM]', e); }
-}
-async function getTokenFCM(messaging, opts) {
-  const { getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
-  return getToken(messaging, opts);
-}
-
-// ── NOTIFICATION BANNER ──
-function renderNotifBanner() {
-  const c = document.getElementById('notif-banner-container');
-  if(!c || currentUser.role === 'admin' || Notification.permission === 'granted') { if(c) c.innerHTML=''; return; }
-  c.innerHTML = `<div class="notif-banner" id="notif-banner">
+    // ── NOTIFICATION BANNER ──
+    function renderNotifBanner() {
+      const c = document.getElementById('notif-banner-container');
+      if (!c || currentUser.role === 'admin' || Notification.permission === 'granted') { if (c) c.innerHTML = ''; return; }
+      c.innerHTML = `<div class="notif-banner" id="notif-banner">
     <span style="font-size:20px;">🔔</span>
     <span class="notif-banner-text">Enable notifications to get alerts when Gnanesh posts a notice!</span>
     <button class="btn-allow-notif" onclick="requestNotifPermission()">Allow</button>
     <button class="btn-dismiss-notif" onclick="hideBanner()">✕</button>
   </div>`;
-}
-function hideBanner() { const b = document.getElementById('notif-banner'); if(b) b.remove(); }
+    }
+    function hideBanner() { const b = document.getElementById('notif-banner'); if (b) b.remove(); }
 
-// ── TABS ──
-const TAB_NAMES = ['news','dinner','pay','admin'];
-function showTab(name) {
-  currentTab = name;
-  TAB_NAMES.forEach(t => document.getElementById('tab-'+t).style.display = t===name ? '' : 'none');
-  document.querySelectorAll('.nav-tab').forEach((btn, i) => btn.classList.toggle('active', TAB_NAMES[i] === name));
+    // ── TABS ──
+    const TAB_NAMES = ['news', 'dinner', 'pay', 'admin'];
+    function showTab(name) {
+      currentTab = name;
+      TAB_NAMES.forEach(t => document.getElementById('tab-' + t).style.display = t === name ? '' : 'none');
+      document.querySelectorAll('.nav-tab').forEach((btn, i) => btn.classList.toggle('active', TAB_NAMES[i] === name));
 
-  // Persist current tab in session so refresh restores it
-  if(currentUser) saveSession(currentUser.name, name);
+      // Persist current tab in session so refresh restores it
+      if (currentUser) saveSession(currentUser.name, name);
 
-  if(name==='news')   { renderNews(); if(currentUser.role !== 'admin') renderNotifBanner(); }
-  if(name==='dinner') renderDinner();
-  if(name==='pay')    renderPay();
-  if(name==='admin')  loadAdminPanel();
-}
+      if (name === 'news') { renderNews(); if (currentUser.role !== 'admin') renderNotifBanner(); }
+      if (name === 'dinner') renderDinner();
+      if (name === 'pay') renderPay();
+      if (name === 'admin') loadAdminPanel();
+    }
 
-// ── NEWS ──
-function renderNews() {
-  const list = document.getElementById('news-list');
-  if(!state.news.length) { list.innerHTML = `<div class="empty-state"><div class="icon">📋</div>No notices yet</div>`; return; }
-  list.innerHTML = state.news.map((n,i) => `
+    // ── NEWS ──
+    function renderNews() {
+      const list = document.getElementById('news-list');
+      if (!state.news.length) { list.innerHTML = `<div class="empty-state"><div class="icon">📋</div>No notices yet</div>`; return; }
+      list.innerHTML = state.news.map((n, i) => `
     <div class="news-card">
-      <span class="tag ${n.type==='urgent'?'urgent':n.type==='info'?'info':''}">${n.type}</span>
+      <span class="tag ${n.type === 'urgent' ? 'urgent' : n.type === 'info' ? 'info' : ''}">${n.type}</span>
       <h3>${escHtml(n.title)}</h3>
       ${n.body ? `<p>${escHtml(n.body)}</p>` : ''}
       <div class="meta">Posted by Gnanesh · ${n.date}</div>
-      ${currentUser.role==='admin' ? `<button class="btn-del" onclick="deleteNews(${i})">✕</button>` : ''}
+      ${currentUser.role === 'admin' ? `<button class="btn-del" onclick="deleteNews(${i})">✕</button>` : ''}
     </div>`).join('');
-}
-function postNews() {
-  const title = document.getElementById('news-title').value.trim();
-  if(!title) { showToast('Enter a title'); return; }
-  const type = document.getElementById('news-type').value;
-  const body = document.getElementById('news-body').value.trim();
-  const d    = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-  state.news.unshift({ title, body, type, date: d });
-  saveState(); closeModal('modal-news');
-  document.getElementById('news-title').value = '';
-  document.getElementById('news-body').value  = '';
-  renderNews(); showToast('Notice posted!');
-  sendPushToAll(title, body || type);
-}
-async function sendPushToAll(title, body) {
-  // FIX: The legacy FCM API (fcm.googleapis.com/fcm/send) was deprecated June 2024.
-  // Push notifications now require a backend (Cloud Function / server) with Firebase Admin SDK.
-  // For this portal, push is skipped silently — notices are still visible in the app in real-time.
-  if(!state.fcmTokens?.length) return;
-  console.log('[FCM] Push skipped — legacy API deprecated. Upgrade to Firebase Admin SDK for push.');
-  // Uncomment and configure a Cloud Function endpoint if you want push notifications:
-  // try {
-  //   await fetch('YOUR_CLOUD_FUNCTION_URL/sendPush', {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ title: `🏠 Room Portal — ${title}`, body, tokens: state.fcmTokens })
-  //   });
-  //   showToast('📣 Push notification sent!');
-  // } catch(e) { console.warn('[FCM] Push failed:', e); }
-}
-function deleteNews(i) { state.news.splice(i,1); saveState(); renderNews(); }
+    }
+    function postNews() {
+      const title = document.getElementById('news-title').value.trim();
+      if (!title) { showToast('Enter a title'); return; }
+      const type = document.getElementById('news-type').value;
+      const body = document.getElementById('news-body').value.trim();
+      const d = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      state.news.unshift({ title, body, type, date: d });
+      saveState(); closeModal('modal-news');
+      document.getElementById('news-title').value = '';
+      document.getElementById('news-body').value = '';
+      renderNews(); showToast('Notice posted!');
+      sendPushToAll(title, body || type);
+    }
+    async function sendPushToAll(title, body) {
+      // FIX: The legacy FCM API (fcm.googleapis.com/fcm/send) was deprecated June 2024.
+      // Push notifications now require a backend (Cloud Function / server) with Firebase Admin SDK.
+      // For this portal, push is skipped silently — notices are still visible in the app in real-time.
+      if (!state.fcmTokens?.length) return;
+      console.log('[FCM] Push skipped — legacy API deprecated. Upgrade to Firebase Admin SDK for push.');
+      // Uncomment and configure a Cloud Function endpoint if you want push notifications:
+      // try {
+      //   await fetch('YOUR_CLOUD_FUNCTION_URL/sendPush', {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify({ title: `🏠 Room Portal — ${title}`, body, tokens: state.fcmTokens })
+      //   });
+      //   showToast('📣 Push notification sent!');
+      // } catch(e) { console.warn('[FCM] Push failed:', e); }
+    }
+    function deleteNews(i) { state.news.splice(i, 1); saveState(); renderNews(); }
 
-// ── DINNER POLL ──
-function renderDinner() {
-  const d = document.getElementById('dinner-display');
-  const active = state.polls.filter(p => !p.closed);
-  const closed = state.polls.filter(p =>  p.closed);
-  if(!state.polls.length) { d.innerHTML = `<div class="empty-state"><div class="icon">🗳️</div>No polls yet — Admin can create one!</div>`; return; }
-  let html = '';
-  if(active.length) html += active.map(p => renderPollCard(p, state.polls.indexOf(p), false)).join('');
-  if(closed.length) {
-    html += `<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;">Past Polls</div>`;
-    html += closed.map(p => renderPollCard(p, state.polls.indexOf(p), true)).join('');
-  }
-  d.innerHTML = html;
-}
-function renderPollCard(p, idx, viewOnly) {
-  const totalVotes = p.options.reduce((s,o) => s + o.votes.length, 0);
-  const myVote     = p.options.findIndex(o => o.votes.includes(currentUser.name));
-  const hasVoted   = myVote >= 0;
-  const canVote    = !viewOnly && !p.closed;
-  const optsHtml   = p.options.map((opt, oi) => {
-    const pct      = totalVotes ? Math.round((opt.votes.length/totalVotes)*100) : 0;
-    const isMyVote = opt.votes.includes(currentUser.name);
-    return `<div class="poll-option ${isMyVote?'voted':''}" onclick="${canVote?`castVote(${idx},${oi})`:''}" style="cursor:${canVote?'pointer':'default'}">
-      <div class="poll-option-bar" style="width:${(hasVoted||viewOnly)?pct:0}%"></div>
+    // ── DINNER POLL ──
+    function renderDinner() {
+      const d = document.getElementById('dinner-display');
+      const active = state.polls.filter(p => !p.closed);
+      const closed = state.polls.filter(p => p.closed);
+      if (!state.polls.length) { d.innerHTML = `<div class="empty-state"><div class="icon">🗳️</div>No polls yet — Admin can create one!</div>`; return; }
+      let html = '';
+      if (active.length) html += active.map(p => renderPollCard(p, state.polls.indexOf(p), false)).join('');
+      if (closed.length) {
+        html += `<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px;">Past Polls</div>`;
+        html += closed.map(p => renderPollCard(p, state.polls.indexOf(p), true)).join('');
+      }
+      d.innerHTML = html;
+    }
+    function renderPollCard(p, idx, viewOnly) {
+      const totalVotes = p.options.reduce((s, o) => s + o.votes.length, 0);
+      const myVote = p.options.findIndex(o => o.votes.includes(currentUser.name));
+      const hasVoted = myVote >= 0;
+      const canVote = !viewOnly && !p.closed;
+      const optsHtml = p.options.map((opt, oi) => {
+        const pct = totalVotes ? Math.round((opt.votes.length / totalVotes) * 100) : 0;
+        const isMyVote = opt.votes.includes(currentUser.name);
+        return `<div class="poll-option ${isMyVote ? 'voted' : ''}" onclick="${canVote ? `castVote(${idx},${oi})` : ''}" style="cursor:${canVote ? 'pointer' : 'default'}">
+      <div class="poll-option-bar" style="width:${(hasVoted || viewOnly) ? pct : 0}%"></div>
       <div class="poll-option-content">
-        <span class="poll-option-label">${isMyVote?'✓ ':''}${escHtml(opt.label)}</span>
-        ${(hasVoted||viewOnly)?`<span class="poll-option-pct">${pct}% (${opt.votes.length})</span>`:''}
+        <span class="poll-option-label">${isMyVote ? '✓ ' : ''}${escHtml(opt.label)}</span>
+        ${(hasVoted || viewOnly) ? `<span class="poll-option-pct">${pct}% (${opt.votes.length})</span>` : ''}
       </div>
-      ${(hasVoted||viewOnly)&&opt.votes.length?`<div class="poll-voters">${escHtml(opt.votes.join(', '))}</div>`:''}
+      ${(hasVoted || viewOnly) && opt.votes.length ? `<div class="poll-voters">${escHtml(opt.votes.join(', '))}</div>` : ''}
     </div>`;
-  }).join('');
-  return `<div class="poll-card">
+      }).join('');
+      return `<div class="poll-card">
     <div class="poll-question">${escHtml(p.question)}</div>
-    <div class="poll-meta">${p.date} · ${totalVotes} vote${totalVotes!==1?'s':''} · ${p.closed?'Closed':'Open'}</div>
+    <div class="poll-meta">${p.date} · ${totalVotes} vote${totalVotes !== 1 ? 's' : ''} · ${p.closed ? 'Closed' : 'Open'}</div>
     ${optsHtml}
     <div class="poll-footer">
-      <span class="poll-total">${totalVotes} total vote${totalVotes!==1?'s':''}</span>
+      <span class="poll-total">${totalVotes} total vote${totalVotes !== 1 ? 's' : ''}</span>
       <span style="display:flex;gap:8px;">
-        ${currentUser.role==='admin'&&!p.closed?`<button class="poll-close-btn" onclick="closePoll(${idx})">Close poll</button>`:''}
-        ${currentUser.role==='admin'?`<button class="poll-close-btn" onclick="deletePoll(${idx})" style="color:var(--danger)">Delete</button>`:''}
+        ${currentUser.role === 'admin' && !p.closed ? `<button class="poll-close-btn" onclick="closePoll(${idx})">Close poll</button>` : ''}
+        ${currentUser.role === 'admin' ? `<button class="poll-close-btn" onclick="deletePoll(${idx})" style="color:var(--danger)">Delete</button>` : ''}
       </span>
     </div>
   </div>`;
-}
-async function castVote(pollIdx, optIdx) {
-  const poll = state.polls[pollIdx];
-  if(!poll||poll.closed) return;
-  const alreadyVoted = poll.options[optIdx].votes.includes(currentUser.name);
-  // Remove previous vote from all options
-  poll.options.forEach(o => { o.votes = o.votes.filter(v => v !== currentUser.name); });
-  // If clicking same option again — it's a toggle-off (remove vote)
-  if(!alreadyVoted) poll.options[optIdx].votes.push(currentUser.name);
-  renderDinner(); // instant local update
-  try {
-    await saveState();
-    showToast(alreadyVoted ? 'Vote removed' : '✅ Vote cast!');
-  } catch(e) {
-    showToast('⚠️ Vote saved locally but sync failed');
-  }
-}
-function closePoll(idx)  { state.polls[idx].closed=true;  saveState(); renderDinner(); }
-function deletePoll(idx) { state.polls.splice(idx,1);      saveState(); renderDinner(); }
-function addPollOpt() {
-  const list = document.getElementById('poll-options-list');
-  const row  = document.createElement('div'); row.className = 'poll-opt-row';
-  row.innerHTML = `<input class="form-input" placeholder="Option ${list.children.length+1}"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button>`;
-  list.appendChild(row);
-}
-function removePollOpt(btn) {
-  const list = document.getElementById('poll-options-list');
-  if(list.children.length > 2) btn.closest('.poll-opt-row').remove();
-  else showToast('Need at least 2 options');
-}
-function createPoll() {
-  const q = document.getElementById('poll-question').value.trim();
-  if(!q) { showToast('⚠️ Please type a question first!'); return; }
-  const opts = [...document.querySelectorAll('#poll-options-list .form-input')].map(i=>i.value.trim()).filter(Boolean);
-  if(opts.length < 2) { showToast('⚠️ Fill in at least 2 options before creating!'); return; }
-  const d = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-  state.polls.unshift({ question:q, options:opts.map(l=>({label:l,votes:[]})), date:d, closed:false });
-  closeModal('modal-poll');
-  document.getElementById('poll-question').value = '';
-  document.querySelectorAll('#poll-options-list .form-input').forEach(i=>i.value='');
-  renderDinner();
-  saveState().then(() => showToast('✅ Poll created & synced!')).catch(() => showToast('⚠️ Poll saved locally but sync failed'));
-}
+    }
+    async function castVote(pollIdx, optIdx) {
+      const poll = state.polls[pollIdx];
+      if (!poll || poll.closed) return;
+      const alreadyVoted = poll.options[optIdx].votes.includes(currentUser.name);
+      // Remove previous vote from all options
+      poll.options.forEach(o => { o.votes = o.votes.filter(v => v !== currentUser.name); });
+      // If clicking same option again — it's a toggle-off (remove vote)
+      if (!alreadyVoted) poll.options[optIdx].votes.push(currentUser.name);
+      renderDinner(); // instant local update
+      try {
+        await saveState();
+        showToast(alreadyVoted ? 'Vote removed' : '✅ Vote cast!');
+      } catch (e) {
+        showToast('⚠️ Vote saved locally but sync failed');
+      }
+    }
+    function closePoll(idx) { state.polls[idx].closed = true; saveState(); renderDinner(); }
+    function deletePoll(idx) { state.polls.splice(idx, 1); saveState(); renderDinner(); }
+    function addPollOpt() {
+      const list = document.getElementById('poll-options-list');
+      const row = document.createElement('div'); row.className = 'poll-opt-row';
+      row.innerHTML = `<input class="form-input" placeholder="Option ${list.children.length + 1}"/><button class="btn-rm-opt" onclick="removePollOpt(this)">✕</button>`;
+      list.appendChild(row);
+    }
+    function removePollOpt(btn) {
+      const list = document.getElementById('poll-options-list');
+      if (list.children.length > 2) btn.closest('.poll-opt-row').remove();
+      else showToast('Need at least 2 options');
+    }
+    function createPoll() {
+      const q = document.getElementById('poll-question').value.trim();
+      if (!q) { showToast('⚠️ Please type a question first!'); return; }
+      const opts = [...document.querySelectorAll('#poll-options-list .form-input')].map(i => i.value.trim()).filter(Boolean);
+      if (opts.length < 2) { showToast('⚠️ Fill in at least 2 options before creating!'); return; }
+      const d = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      state.polls.unshift({ question: q, options: opts.map(l => ({ label: l, votes: [] })), date: d, closed: false });
+      closeModal('modal-poll');
+      document.getElementById('poll-question').value = '';
+      document.querySelectorAll('#poll-options-list .form-input').forEach(i => i.value = '');
+      renderDinner();
+      saveState().then(() => showToast('✅ Poll created & synced!')).catch(() => showToast('⚠️ Poll saved locally but sync failed'));
+    }
 
-// ── PAYMENT ──
-function currentMonthKey()   { const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
-function currentMonthLabel() { return new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'}); }
+    // ── PAYMENT ──
+    function currentMonthKey() { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`; }
+    function currentMonthLabel() { return new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }); }
 
-function renderPay() {
-  const el      = document.getElementById('pay-display');
-  const isAdmin = currentUser.role === 'admin';
-  const upiId   = state.upi || '';
+    function renderPay() {
+      const el = document.getElementById('pay-display');
+      const isAdmin = currentUser.role === 'admin';
+      const upiId = state.upi || '';
 
-  // ── MEMBER VIEW ──
-  if(!isAdmin) {
-    const myEntries = state.personAmounts[currentUser.name] || [];
-    const myTotal   = myEntries.reduce((s,e) => s + Number(e.amount||0), 0);
-    const myPaid    = myEntries.filter(e=>e.paid).reduce((s,e) => s + Number(e.amount||0), 0);
-    const myPending = myTotal - myPaid;
+      // ── MEMBER VIEW ──
+      if (!isAdmin) {
+        const myEntries = state.personAmounts[currentUser.name] || [];
+        const myTotal = myEntries.reduce((s, e) => s + Number(e.amount || 0), 0);
+        const myPaid = myEntries.filter(e => e.paid).reduce((s, e) => s + Number(e.amount || 0), 0);
+        const myPending = myTotal - myPaid;
 
-    let html = `<div class="pay-amount-box">
+        let html = `<div class="pay-amount-box">
       <div class="lbl">Amount Pending</div>
       <div class="amt">₹${myPending > 0 ? myPending.toLocaleString('en-IN') : '0'}</div>
       <div class="sublbl">₹${myPaid.toLocaleString('en-IN')} paid · ₹${myTotal.toLocaleString('en-IN')} total assigned</div>
     </div>`;
 
-    if(upiId) {
-      const amParam = myPending > 0 ? `&am=${myPending}` : '';
-      html += `<div class="upi-apps-section">
+        if (upiId) {
+          const amParam = myPending > 0 ? `&am=${myPending}` : '';
+          html += `<div class="upi-apps-section">
         <div class="upi-apps-label">Pay quickly using your UPI app:</div>
         <div class="upi-apps-grid">
           <a class="upi-app-btn" href="tez://upi/pay?pa=${encodeURIComponent(upiId)}${amParam}&cu=INR&tn=RoomPayment" onclick="handleUPI(event,this.href)">
@@ -859,13 +1927,13 @@ function renderPay() {
         <div style="flex:1;"><div class="upi-lbl">UPI ID</div><div class="upi-id">${escHtml(upiId)}</div></div>
         <button class="upi-copy" onclick="copyUPI()">Copy</button>
       </div>`;
-    }
+        }
 
-    html += `<div class="scanner-box">
+        html += `<div class="scanner-box">
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Scan to Pay</div>
       ${state.scanner
-        ? `<img src="${state.scanner}" class="scanner-img" alt="QR Code"/>`
-        : `<div class="scanner-placeholder">
+            ? `<img src="${state.scanner}" class="scanner-img" alt="QR Code"/>`
+            : `<div class="scanner-placeholder">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
               <rect x="3" y="14" width="7" height="7" rx="1"/>
@@ -875,22 +1943,22 @@ function renderPay() {
           </div>`}
     </div>`;
 
-    // ── Dues breakdown — now clearly shows what admin has assigned ──
-    html += `<div class="dues-card">
+        // ── Dues breakdown — now clearly shows what admin has assigned ──
+        html += `<div class="dues-card">
       <div class="dues-card-header">📋 My Dues Breakdown</div>`;
 
-    if(myEntries.length) {
-      html += myEntries.map(e => `
+        if (myEntries.length) {
+          html += myEntries.map(e => `
         <div class="dues-entry-row">
           <span class="dues-date">${escHtml(e.date)}</span>
           <span class="dues-note">${e.note ? escHtml(e.note) : '—'}</span>
           <span class="dues-amount">₹${Number(e.amount).toLocaleString('en-IN')}</span>
-          <span class="dues-badge ${e.paid?'paid':'pending'}">${e.paid?'✓ Paid':'⏳ Due'}</span>
+          <span class="dues-badge ${e.paid ? 'paid' : 'pending'}">${e.paid ? '✓ Paid' : '⏳ Due'}</span>
         </div>`).join('');
-      html += `<div class="dues-summary-row">
+          html += `<div class="dues-summary-row">
         <span class="dues-summary-item">Total: <span>₹${myTotal.toLocaleString('en-IN')}</span></span>
         <span class="dues-summary-item" style="color:var(--accent);">Paid: <span>₹${myPaid.toLocaleString('en-IN')}</span></span>
-        <span class="dues-summary-item" style="color:${myPending>0?'var(--danger)':'var(--accent)'};">Pending: <span>₹${myPending.toLocaleString('en-IN')}</span></span>
+        <span class="dues-summary-item" style="color:${myPending > 0 ? 'var(--danger)' : 'var(--accent)'};">Pending: <span>₹${myPending.toLocaleString('en-IN')}</span></span>
       </div>
       ${myPending > 0 ? `
       <div style="padding:12px 16px;border-top:1px solid var(--border);">
@@ -900,138 +1968,139 @@ function renderPay() {
         <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">This notifies Gnanesh to verify your payment</div>
       </div>` : `
       <div style="padding:12px 16px;text-align:center;border-top:1px solid var(--border);font-size:13px;color:var(--accent);font-weight:500;">🎉 All dues cleared!</div>`}`;
-    } else {
-      html += `<div class="dues-empty">No dues assigned yet — Gnanesh will add them shortly 😊</div>`;
-    }
-    html += `</div>`;
-    el.innerHTML = html;
-    return;
-  }
+        } else {
+          html += `<div class="dues-empty">No dues assigned yet — Gnanesh will add them shortly 😊</div>`;
+        }
+        html += `</div>`;
+        el.innerHTML = html;
+        return;
+      }
 
-  // ── ADMIN VIEW: just show UPI + QR for reference ──
-  let html = '';
-  if(upiId) {
-    html += `<div class="upi-box">
+      // ── ADMIN VIEW: just show UPI + QR for reference ──
+      let html = '';
+      if (upiId) {
+        html += `<div class="upi-box">
       <div class="upi-icon">📲</div>
       <div style="flex:1;"><div class="upi-lbl">UPI ID</div><div class="upi-id">${escHtml(upiId)}</div></div>
       <button class="upi-copy" onclick="copyUPI()">Copy</button>
     </div>`;
-  }
-  html += `<div class="scanner-box">
+      }
+      html += `<div class="scanner-box">
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">QR Code (as seen by members)</div>
     ${state.scanner
-      ? `<img src="${state.scanner}" class="scanner-img" alt="QR Code"/>`
-      : `<div class="scanner-placeholder"><span style="font-size:13px;">No QR uploaded yet</span></div>`}
+          ? `<img src="${state.scanner}" class="scanner-img" alt="QR Code"/>`
+          : `<div class="scanner-placeholder"><span style="font-size:13px;">No QR uploaded yet</span></div>`}
   </div>`;
-  el.innerHTML = html;
-}
+      el.innerHTML = html;
+    }
 
-function handleUPI(e, href) {
-  e.preventDefault();
-  // On mobile, attempt to open the UPI app
-  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-  if(isMobile) {
-    window.location.href = href;
-    setTimeout(() => showToast('Opening payment app...'), 400);
-  } else {
-    // Desktop: deep links won't work — copy UPI ID instead
-    copyUPI();
-    showToast('UPI deep links work on mobile only. UPI ID copied!');
-  }
-}
-function copyUPI() {
-  if(!state.upi) return;
-  if(navigator.clipboard?.writeText) navigator.clipboard.writeText(state.upi).then(()=>showToast('UPI ID copied!')).catch(()=>fallbackCopy(state.upi));
-  else fallbackCopy(state.upi);
-}
-async function memberSelfConfirmPayment() {
-  const myEntries = state.personAmounts[currentUser.name];
-  if(!myEntries) return;
-  const pendingEntries = myEntries.filter(e => !e.paid);
-  if(!pendingEntries.length) { showToast('No pending dues!'); return; }
-  // Mark all pending entries as paid
-  pendingEntries.forEach(e => { e.paid = true; });
-  renderPay();
-  try {
-    await saveState();
-    showToast('✅ Payment confirmed! Gnanesh will verify shortly.');
-    // Post a news notice so admin can see it
-    const amt = pendingEntries.reduce((s,e) => s + Number(e.amount||0), 0);
-    const d   = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-    state.news.unshift({ title:`💰 ${currentUser.name} confirmed payment of ₹${amt.toLocaleString('en-IN')}`, body:'Please verify and update the payment status.', type:'info', date:d });
-    await saveState();
-  } catch(e) {
-    showToast('⚠️ Confirmation saved locally — sync failed. Check internet.');
-  }
-}
-  const el = document.createElement('textarea');
-  el.value=text; el.style.position='fixed'; el.style.opacity='0';
-  document.body.appendChild(el); el.select();
-  try { document.execCommand('copy'); showToast('UPI ID copied!'); } catch(e) { showToast('Copy failed'); }
-  document.body.removeChild(el);
-}
+    function handleUPI(e, href) {
+      e.preventDefault();
+      // On mobile, attempt to open the UPI app
+      const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isMobile) {
+        window.location.href = href;
+        setTimeout(() => showToast('Opening payment app...'), 400);
+      } else {
+        // Desktop: deep links won't work — copy UPI ID instead
+        copyUPI();
+        showToast('UPI deep links work on mobile only. UPI ID copied!');
+      }
+    }
+    function copyUPI() {
+      if (!state.upi) return;
+      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(state.upi).then(() => showToast('UPI ID copied!')).catch(() => fallbackCopy(state.upi));
+      else fallbackCopy(state.upi);
+    }
+    async function memberSelfConfirmPayment() {
+      const myEntries = state.personAmounts[currentUser.name];
+      if (!myEntries) return;
+      const pendingEntries = myEntries.filter(e => !e.paid);
+      if (!pendingEntries.length) { showToast('No pending dues!'); return; }
+      // Mark all pending entries as paid
+      pendingEntries.forEach(e => { e.paid = true; });
+      renderPay();
+      try {
+        await saveState();
+        showToast('✅ Payment confirmed! Gnanesh will verify shortly.');
+        // Post a news notice so admin can see it
+        const amt = pendingEntries.reduce((s, e) => s + Number(e.amount || 0), 0);
+        const d = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        state.news.unshift({ title: `💰 ${currentUser.name} confirmed payment of ₹${amt.toLocaleString('en-IN')}`, body: 'Please verify and update the payment status.', type: 'info', date: d });
+        await saveState();
+      } catch (e) {
+        showToast('⚠️ Confirmation saved locally — sync failed. Check internet.');
+      }
+    }
+    function fallbackCopy(text) {
+      const el = document.createElement('textarea');
+      el.value = text; el.style.position = 'fixed'; el.style.opacity = '0';
+      document.body.appendChild(el); el.select();
+      try { document.execCommand('copy'); showToast('UPI ID copied!'); } catch (e) { showToast('Copy failed'); }
+      document.body.removeChild(el);
+    }
 
-// ── ADMIN PANEL ──
-function loadAdminPanel() {
-  document.getElementById('set-upi').value   = state.upi      || '';
-  document.getElementById('set-vapid').value = state.vapidKey || '';
-  const sp = document.getElementById('scanner-preview-admin');
-  sp.innerHTML = state.scanner
-    ? `<img src="${state.scanner}" style="width:80px;height:80px;object-fit:contain;border-radius:8px;" alt="QR"/>`
-    : `<div class="scanner-placeholder" style="width:80px;height:80px;font-size:11px;">No image</div>`;
+    // ── ADMIN PANEL ──
+    function loadAdminPanel() {
+      document.getElementById('set-upi').value = state.upi || '';
+      document.getElementById('set-vapid').value = state.vapidKey || '';
+      const sp = document.getElementById('scanner-preview-admin');
+      sp.innerHTML = state.scanner
+        ? `<img src="${state.scanner}" style="width:80px;height:80px;object-fit:contain;border-radius:8px;" alt="QR"/>`
+        : `<div class="scanner-placeholder" style="width:80px;height:80px;font-size:11px;">No image</div>`;
 
-  const mk = currentMonthKey();
-  document.getElementById('members-status-list').innerHTML = MEMBERS.map(m => {
-    const st = state.payStatus[m]?.[mk] || 'pending';
-    return `<div class="member-row">
+      const mk = currentMonthKey();
+      document.getElementById('members-status-list').innerHTML = MEMBERS.map(m => {
+        const st = state.payStatus[m]?.[mk] || 'pending';
+        return `<div class="member-row">
       <div class="member-info">
         <div class="member-av">${USERS[m].initials}</div>
         <div><div class="member-name">${m}</div><div class="member-id">${currentMonthLabel()}</div></div>
       </div>
-      ${st==='paid'
-        ? `<button class="btn-mark-pending" onclick="togglePay('${m}','pending')">Mark Pending</button>`
-        : `<button class="btn-mark-paid" onclick="togglePay('${m}','paid')">Mark Paid</button>`}
+      ${st === 'paid'
+            ? `<button class="btn-mark-pending" onclick="togglePay('${m}','pending')">Mark Pending</button>`
+            : `<button class="btn-mark-paid" onclick="togglePay('${m}','paid')">Mark Paid</button>`}
     </div>`;
-  }).join('');
+      }).join('');
 
-  renderPersonAmounts();
-}
+      renderPersonAmounts();
+    }
 
-function saveVapid() {
-  const v = document.getElementById('set-vapid').value.trim();
-  if(v) { state.vapidKey=v; saveState(); showToast('VAPID key saved!'); } else showToast('Enter a VAPID key first');
-}
+    function saveVapid() {
+      const v = document.getElementById('set-vapid').value.trim();
+      if (v) { state.vapidKey = v; saveState(); showToast('VAPID key saved!'); } else showToast('Enter a VAPID key first');
+    }
 
-function renderPersonAmounts() {
-  const container = document.getElementById('person-amounts-list');
-  if(!container) return;
-  const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-  container.innerHTML = MEMBERS.map(m => {
-    const entries   = state.personAmounts[m] || [];
-    const total     = entries.reduce((s,e) => s + Number(e.amount||0), 0);
-    const paidTotal = entries.filter(e=>e.paid).reduce((s,e) => s + Number(e.amount||0), 0);
-    const pending   = total - paidTotal;
-    const entriesHtml = entries.length
-      ? entries.map((e,ei) => `
+    function renderPersonAmounts() {
+      const container = document.getElementById('person-amounts-list');
+      if (!container) return;
+      const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      container.innerHTML = MEMBERS.map(m => {
+        const entries = state.personAmounts[m] || [];
+        const total = entries.reduce((s, e) => s + Number(e.amount || 0), 0);
+        const paidTotal = entries.filter(e => e.paid).reduce((s, e) => s + Number(e.amount || 0), 0);
+        const pending = total - paidTotal;
+        const entriesHtml = entries.length
+          ? entries.map((e, ei) => `
         <div class="day-entry">
-          <span class="day-label">${escHtml(e.date)}${e.note?' — '+escHtml(e.note):''}</span>
+          <span class="day-label">${escHtml(e.date)}${e.note ? ' — ' + escHtml(e.note) : ''}</span>
           <span class="day-amount">₹${Number(e.amount).toLocaleString('en-IN')}</span>
-          <span class="day-status ${e.paid?'paid':'pending'}">${e.paid?'Paid':'Due'}</span>
-          <button class="day-toggle" onclick="toggleEntryPaid('${m}',${ei})">${e.paid?'Unmark':'Mark Paid'}</button>
+          <span class="day-status ${e.paid ? 'paid' : 'pending'}">${e.paid ? 'Paid' : 'Due'}</span>
+          <button class="day-toggle" onclick="toggleEntryPaid('${m}',${ei})">${e.paid ? 'Unmark' : 'Mark Paid'}</button>
           <button class="day-del" onclick="deleteEntry('${m}',${ei})">✕</button>
         </div>`).join('')
-      : `<div style="font-size:12px;color:var(--muted);padding:8px 0;">No entries yet</div>`;
+          : `<div style="font-size:12px;color:var(--muted);padding:8px 0;">No entries yet</div>`;
 
-    return `<div class="person-amount-card">
+        return `<div class="person-amount-card">
       <div class="person-amount-header" onclick="togglePersonExpand('${m}')">
         <div class="member-av">${USERS[m].initials}</div>
         <div class="person-header-info">
           <div class="member-name">${m}</div>
-          <div class="member-id">${entries.length} entr${entries.length!==1?'ies':'y'}</div>
+          <div class="member-id">${entries.length} entr${entries.length !== 1 ? 'ies' : 'y'}</div>
         </div>
         <div style="text-align:right;margin-right:8px;">
           <div class="person-total">₹${total.toLocaleString('en-IN')} total</div>
-          <div class="person-paid-count" style="color:${pending>0?'var(--danger)':'var(--accent)'};">₹${pending.toLocaleString('en-IN')} pending</div>
+          <div class="person-paid-count" style="color:${pending > 0 ? 'var(--danger)' : 'var(--accent)'};">₹${pending.toLocaleString('en-IN')} pending</div>
         </div>
         <div class="expand-icon" id="exp-icon-${m}">▼</div>
       </div>
@@ -1045,104 +2114,105 @@ function renderPersonAmounts() {
         </div>
       </div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function togglePersonExpand(m) {
-  const list = document.getElementById('exp-list-'+m), icon = document.getElementById('exp-icon-'+m);
-  if(!list||!icon) return;
-  const open = list.classList.contains('open');
-  list.classList.toggle('open', !open); icon.classList.toggle('open', !open);
-}
-function reopenExpand(m) {
-  setTimeout(() => {
-    document.getElementById('exp-list-'+m)?.classList.add('open');
-    document.getElementById('exp-icon-'+m)?.classList.add('open');
-  }, 15);
-}
-function addEntry(m) {
-  const date = document.getElementById('inp-date-'+m).value.trim();
-  const note = document.getElementById('inp-note-'+m).value.trim();
-  const amt  = document.getElementById('inp-amt-'+m).value.trim();
-  if(!date || !amt || isNaN(amt) || Number(amt)<=0) { showToast('Enter a valid date and amount'); return; }
-  if(!state.personAmounts[m]) state.personAmounts[m] = [];
-  state.personAmounts[m].push({ date, note, amount: Number(amt), paid: false });
-  saveState(); renderPersonAmounts(); reopenExpand(m);
-  showToast(`Entry added for ${m}`);
-}
-function toggleEntryPaid(m, ei) {
-  if(!state.personAmounts[m]?.[ei]) return;
-  state.personAmounts[m][ei].paid = !state.personAmounts[m][ei].paid;
-  saveState(); renderPersonAmounts(); reopenExpand(m);
-}
-function deleteEntry(m, ei) {
-  if(!state.personAmounts[m]) return;
-  state.personAmounts[m].splice(ei,1);
-  saveState(); renderPersonAmounts(); reopenExpand(m);
-}
-function togglePay(member, status) {
-  const mk = currentMonthKey();
-  if(!state.payStatus[member]) state.payStatus[member]={};
-  state.payStatus[member][mk] = status;
-  saveState(); loadAdminPanel();
-  showToast(`${member} marked as ${status}`);
-}
-function saveUPI() {
-  const v = document.getElementById('set-upi').value.trim();
-  if(v) { state.upi=v; saveState(); showToast('UPI ID saved!'); } else showToast('Enter a UPI ID first');
-}
-function uploadScanner(e) {
-  const file = e.target.files[0]; if(!file) return;
-  if(file.size > 2*1024*1024) { showToast('Image too large — use a smaller file'); return; }
-  const reader = new FileReader();
-  reader.onload  = ev => { state.scanner = ev.target.result; saveState(); loadAdminPanel(); showToast('QR uploaded!'); };
-  reader.onerror = () => showToast('Failed to read image');
-  reader.readAsDataURL(file);
-}
+    function togglePersonExpand(m) {
+      const list = document.getElementById('exp-list-' + m), icon = document.getElementById('exp-icon-' + m);
+      if (!list || !icon) return;
+      const open = list.classList.contains('open');
+      list.classList.toggle('open', !open); icon.classList.toggle('open', !open);
+    }
+    function reopenExpand(m) {
+      setTimeout(() => {
+        document.getElementById('exp-list-' + m)?.classList.add('open');
+        document.getElementById('exp-icon-' + m)?.classList.add('open');
+      }, 15);
+    }
+    function addEntry(m) {
+      const date = document.getElementById('inp-date-' + m).value.trim();
+      const note = document.getElementById('inp-note-' + m).value.trim();
+      const amt = document.getElementById('inp-amt-' + m).value.trim();
+      if (!date || !amt || isNaN(amt) || Number(amt) <= 0) { showToast('Enter a valid date and amount'); return; }
+      if (!state.personAmounts[m]) state.personAmounts[m] = [];
+      state.personAmounts[m].push({ date, note, amount: Number(amt), paid: false });
+      saveState(); renderPersonAmounts(); reopenExpand(m);
+      showToast(`Entry added for ${m}`);
+    }
+    function toggleEntryPaid(m, ei) {
+      if (!state.personAmounts[m]?.[ei]) return;
+      state.personAmounts[m][ei].paid = !state.personAmounts[m][ei].paid;
+      saveState(); renderPersonAmounts(); reopenExpand(m);
+    }
+    function deleteEntry(m, ei) {
+      if (!state.personAmounts[m]) return;
+      state.personAmounts[m].splice(ei, 1);
+      saveState(); renderPersonAmounts(); reopenExpand(m);
+    }
+    function togglePay(member, status) {
+      const mk = currentMonthKey();
+      if (!state.payStatus[member]) state.payStatus[member] = {};
+      state.payStatus[member][mk] = status;
+      saveState(); loadAdminPanel();
+      showToast(`${member} marked as ${status}`);
+    }
+    function saveUPI() {
+      const v = document.getElementById('set-upi').value.trim();
+      if (v) { state.upi = v; saveState(); showToast('UPI ID saved!'); } else showToast('Enter a UPI ID first');
+    }
+    function uploadScanner(e) {
+      const file = e.target.files[0]; if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { showToast('Image too large — use a smaller file'); return; }
+      const reader = new FileReader();
+      reader.onload = ev => { state.scanner = ev.target.result; saveState(); loadAdminPanel(); showToast('QR uploaded!'); };
+      reader.onerror = () => showToast('Failed to read image');
+      reader.readAsDataURL(file);
+    }
 
-// ── HELPERS ──
-function escHtml(str) {
-  if(!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-bg').forEach(m => {
-  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
-});
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
-}
+    // ── HELPERS ──
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-bg').forEach(m => {
+      m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+    });
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+    }
 
-// ── ENTER KEY LOGIN ──
-document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-document.getElementById('login-id').addEventListener('keydown',   e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
+    // ── ENTER KEY LOGIN ──
+    document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    document.getElementById('login-id').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
 
-// ── INIT: restore session on refresh ──
-// FIX: Wait for Firebase module to finish setting up before calling loadState()
-// (type="module" scripts are deferred — they may not have run when this script executes)
-async function initApp() {
-  await loadState();
-  subscribeSharedState();
+    // ── INIT: restore session on refresh ──
+    // FIX: Wait for Firebase module to finish setting up before calling loadState()
+    // (type="module" scripts are deferred — they may not have run when this script executes)
+    async function initApp() {
+      await loadState();
+      subscribeSharedState();
 
-  const session = loadSession();
-  if(!session?.user) return;
-  const user = USERS[session.user];
-  if(!user) return;
-  currentUser = { name: session.user, ...user };
-  startApp(session.tab || 'news');
-}
+      const session = loadSession();
+      if (!session?.user) return;
+      const user = USERS[session.user];
+      if (!user) return;
+      currentUser = { name: session.user, ...user };
+      startApp(session.tab || 'news');
+    }
 
-if (window._fbReady) {
-  initApp();
-} else {
-  document.addEventListener('fb-ready', initApp, { once: true });
-  // Fallback: if Firebase never fires (e.g. blocked by network), start anyway after 4s
-  setTimeout(() => { if (!window._fbReady) initApp(); }, 4000);
-}
-</script>
+    if (window._fbReady) {
+      initApp();
+    } else {
+      document.addEventListener('fb-ready', initApp, { once: true });
+      // Fallback: if Firebase never fires (e.g. blocked by network), start anyway after 4s
+      setTimeout(() => { if (!window._fbReady) initApp(); }, 4000);
+    }
+  </script>
 </body>
+
 </html>
